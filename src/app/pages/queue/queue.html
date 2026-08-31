@@ -1,0 +1,56 @@
+<div class="toolbar">
+  <h2>Queued &amp; past bookings</h2>
+  <button class="refresh" (click)="load()">↻ Refresh</button>
+</div>
+
+@if (error()) {
+  <div class="banner err">{{ error() }}</div>
+}
+@if (loading()) {
+  <div class="banner">Loading…</div>
+}
+
+@if (!loading() && bookings().length === 0) {
+  <p class="empty">No bookings queued yet. Pick a slot on the Availability page.</p>
+}
+
+@if (bookings().length > 0) {
+  <div class="grid-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Court</th>
+          <th>Play date</th>
+          <th>Time</th>
+          <th>Price</th>
+          <th>Fires at (midnight open)</th>
+          <th>Status</th>
+          <th>Reservation</th>
+          <th>Note</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (b of bookings(); track b.id) {
+          <tr>
+            <td>{{ b.id }}</td>
+            <td>{{ b.courtName || b.courtId }}</td>
+            <td>{{ b.playDate }}</td>
+            <td>{{ b.slotTimeFmt }}</td>
+            <td>{{ b.price }}</td>
+            <td>{{ b.targetFireAt | date: 'EEE d MMM, HH:mm:ss' }}</td>
+            <td><span class="status {{ b.status }}">{{ b.status }}</span></td>
+            <td>{{ b.createdReservationId || '—' }}</td>
+            <td class="note">{{ b.note }}</td>
+            <td>
+              @if (b.status === 'PENDING') {
+                <button class="cancel" (click)="cancel(b)">Cancel</button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

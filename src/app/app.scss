@@ -1,0 +1,58 @@
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--topbar);
+  color: #fff;
+
+  .brand {
+    font-weight: 700;
+    font-size: 1.05rem;
+  }
+
+  nav {
+    display: flex;
+    gap: 0.25rem;
+    a {
+      color: rgba(255, 255, 255, 0.85);
+      text-decoration: none;
+      padding: 0.4rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      &:hover { background: rgba(255, 255, 255, 0.12); }
+      &.active { background: rgba(255, 255, 255, 0.22); color: #fff; }
+    }
+  }
+
+  .health {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(255, 255, 255, 0.12);
+    border: 0;
+    color: #fff;
+    padding: 0.35rem 0.7rem;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 0.8rem;
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #999;
+      display: inline-block;
+      &.ok { background: #34c759; }
+      &.warn { background: #ff9500; }
+      &.err { background: #ff3b30; }
+    }
+  }
+}
+
+main {
+  padding: 1.25rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}

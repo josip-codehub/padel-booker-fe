@@ -1,0 +1,43 @@
+<h2>Settings</h2>
+
+<div class="status-card">
+  @if (current()?.configured) {
+    <p><strong>Configured.</strong> Email: {{ current()?.email }}</p>
+    <p>Token expires: {{ current()?.tokenExpiresAt ? (current()?.tokenExpiresAt | date: 'medium') : '—' }}</p>
+    <p>Last validated: {{ current()?.lastValidatedAt ? (current()?.lastValidatedAt | date: 'medium') : '—' }}</p>
+  } @else {
+    <p class="warn">Not configured yet. Enter your Sporty Plus login below.</p>
+  }
+</div>
+
+<form (ngSubmit)="save()" class="form">
+  <label>
+    Email
+    <input type="email" [ngModel]="email()" (ngModelChange)="email.set($event)" name="email" autocomplete="off" />
+  </label>
+  <label>
+    Password
+    <input type="password" [ngModel]="password()" (ngModelChange)="password.set($event)" name="password" autocomplete="new-password" placeholder="leave blank to keep current" />
+  </label>
+  <details>
+    <summary>Advanced: paste a token directly (optional)</summary>
+    <label>
+      Bearer token
+      <input type="text" [ngModel]="token()" (ngModelChange)="token.set($event)" name="token" placeholder="27683|..." />
+    </label>
+  </details>
+
+  <button type="submit" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Save & verify login' }}</button>
+</form>
+
+@if (message()) {
+  <div class="banner ok">{{ message() }}</div>
+}
+@if (error()) {
+  <div class="banner err">{{ error() }}</div>
+}
+
+<p class="note">
+  Credentials are stored locally in your Postgres database, unencrypted, and are used only to talk to
+  Sporty Plus. The password is the fallback so the app can mint a fresh token if the current one ever expires.
+</p>

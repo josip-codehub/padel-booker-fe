@@ -1,0 +1,63 @@
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  h2 { font-size: 1.1rem; margin: 0; }
+  .refresh { margin-left: auto; }
+}
+
+.banner {
+  padding: 0.6rem 0.8rem;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  &.err { background: #fdecec; border-color: #ff3b30; }
+}
+
+.empty { color: var(--muted); }
+
+.grid-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.85rem;
+
+  th,
+  td {
+    border-bottom: 1px solid var(--border);
+    padding: 0.5rem 0.7rem;
+    text-align: left;
+    white-space: nowrap;
+  }
+  thead th { background: var(--panel); }
+  td.note { white-space: normal; min-width: 220px; color: var(--muted); }
+
+  .status {
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .status.PENDING { background: #fff2cc; }
+  .status.RUNNING { background: #cfe8ff; }
+  .status.SUCCEEDED { background: #d6f5df; color: #0a7d2c; }
+  .status.FAILED { background: #fdecec; color: #c0261b; }
+  .status.CANCELLED { background: #eee; color: #666; }
+
+  .cancel {
+    padding: 0.3rem 0.6rem;
+    background: #fff;
+    border: 1px solid #ff3b30;
+    color: #ff3b30;
+    border-radius: 6px;
+    cursor: pointer;
+    &:hover { background: #ff3b30; color: #fff; }
+  }
+}

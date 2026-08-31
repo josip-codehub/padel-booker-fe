@@ -1,0 +1,59 @@
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  h2 { font-size: 1.1rem; margin: 0; }
+  .refresh { margin-left: auto; }
+}
+
+.banner {
+  padding: 0.6rem 0.8rem;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  &.err { background: #fdecec; border-color: #ff3b30; }
+}
+
+.empty { color: var(--muted); }
+
+.grid-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.82rem;
+
+  th,
+  td {
+    border-bottom: 1px solid var(--border);
+    padding: 0.45rem 0.7rem;
+    text-align: left;
+    white-space: nowrap;
+  }
+  thead th { background: var(--panel); }
+  td.resp {
+    white-space: nowrap;
+    max-width: 420px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: monospace;
+    color: var(--muted);
+  }
+
+  .outcome {
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+  }
+  .outcome.SUCCESS { background: #d6f5df; color: #0a7d2c; }
+  .outcome.COURT_UNAVAILABLE { background: #fff2cc; color: #8a6d00; }
+  .outcome.AUTH_FAILED { background: #ffe0cc; color: #b5460a; }
+  .outcome.ERROR { background: #fdecec; color: #c0261b; }
+}

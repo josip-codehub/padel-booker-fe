@@ -1,0 +1,43 @@
+<div class="toolbar">
+  <h2>Booking attempt history</h2>
+  <button class="refresh" (click)="load()">↻ Refresh</button>
+</div>
+
+@if (error()) {
+  <div class="banner err">{{ error() }}</div>
+}
+@if (loading()) {
+  <div class="banner">Loading…</div>
+}
+@if (!loading() && attempts().length === 0) {
+  <p class="empty">No attempts recorded yet.</p>
+}
+
+@if (attempts().length > 0) {
+  <div class="grid-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>When</th>
+          <th>Booking</th>
+          <th>#</th>
+          <th>Outcome</th>
+          <th>HTTP</th>
+          <th>Response</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (a of attempts(); track a.id) {
+          <tr>
+            <td>{{ a.attemptAt | date: 'd MMM HH:mm:ss.SSS' }}</td>
+            <td>#{{ a.bookingId }}</td>
+            <td>{{ a.attemptNo }}</td>
+            <td><span class="outcome {{ a.outcome }}">{{ a.outcome }}</span></td>
+            <td>{{ a.httpStatus }}</td>
+            <td class="resp" [title]="a.responseBody">{{ snippet(a.responseBody) }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

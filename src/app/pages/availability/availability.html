@@ -1,0 +1,67 @@
+<div class="toolbar">
+  <button (click)="prevWeek()" class="nav">‹ Prev</button>
+  <label class="datepick">
+    Week starting
+    <input type="date" [value]="weekStart()" (change)="onDateChange($any($event.target).value)" />
+  </label>
+  <button (click)="nextWeek()" class="nav">Next ›</button>
+  <button (click)="load()" class="refresh" title="Reload live data">↻ Refresh</button>
+</div>
+
+<div class="legend">
+  <span class="chip free">Available</span>
+  <span class="chip booked">Booked</span>
+  <span class="chip past">Past</span>
+  <span class="chip closed">Closed</span>
+  <span class="hint">Rows marked ✦ are more than a week out — they auto-book at midnight.</span>
+</div>
+
+@if (message()) {
+  <div class="banner ok">{{ message() }}</div>
+}
+@if (error()) {
+  <div class="banner err">{{ error() }}</div>
+}
+@if (loading()) {
+  <div class="banner">Loading live availability…</div>
+}
+
+@for (court of courts(); track court.courtId) {
+  <section class="court">
+    <h2>{{ court.courtName }} <small>({{ court.type }})</small></h2>
+    <div class="grid-scroll">
+      <table class="grid">
+        <thead>
+          <tr>
+            <th class="daycol">Day</th>
+            @for (t of court.times; track t.time) {
+              <th>{{ t.timeFmt }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of court.rows; track row.date) {
+            <tr>
+              <th class="daycol">
+                <span class="wd">{{ row.weekday }}</span>
+                <span class="dm">{{ row.dayMonth }}</span>
+                @if (row.beyondWindow) {
+                  <span class="star" title="More than a week out — auto-booked at midnight">✦</span>
+                }
+              </th>
+              @for (cell of row.cells; track cell.time) {
+                <td [class]="cell.state">
+                  @if (cell.state === 'free') {
+                    <button class="slot" (click)="queue(court, row, cell)" title="Queue this slot">
+                      <span class="price">{{ cell.price }}</span>
+                    </button>
+                  }
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}
