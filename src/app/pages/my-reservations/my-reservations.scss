@@ -1,0 +1,65 @@
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  h2 { font-size: 1.1rem; margin: 0; }
+  .datepick { display: flex; align-items: center; gap: 0.4rem; font-size: 0.9rem; }
+  .refresh { margin-left: auto; }
+}
+
+.banner {
+  padding: 0.6rem 0.8rem;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  &.ok { background: #e7f7ec; border-color: #34c759; }
+  &.err { background: #fdecec; border-color: #ff3b30; }
+}
+
+.empty { color: var(--muted); }
+
+.grid-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.85rem;
+
+  th,
+  td {
+    border-bottom: 1px solid var(--border);
+    padding: 0.5rem 0.7rem;
+    text-align: left;
+  }
+  thead th { background: var(--panel); }
+  .nowrap { white-space: nowrap; }
+  .tag { color: #ff9500; margin-left: 0.25rem; }
+
+  .pill {
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    background: #eee;
+    color: #666;
+  }
+  .pill.paid { background: #d6f5df; color: #0a7d2c; }
+  .pill.due { background: #fff2cc; color: #8a6d00; }
+
+  .cancel {
+    padding: 0.3rem 0.6rem;
+    background: #fff;
+    border: 1px solid #ff3b30;
+    color: #ff3b30;
+    border-radius: 6px;
+    cursor: pointer;
+    &:hover { background: #ff3b30; color: #fff; }
+  }
+}

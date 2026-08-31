@@ -1,0 +1,63 @@
+<div class="toolbar">
+  <h2>My reservations</h2>
+  <label class="datepick">
+    From
+    <input type="date" [value]="from()" (change)="onFromChange($any($event.target).value)" />
+  </label>
+  <button class="refresh" (click)="load()">↻ Refresh</button>
+</div>
+
+@if (message()) {
+  <div class="banner ok">{{ message() }}</div>
+}
+@if (error()) {
+  <div class="banner err">{{ error() }}</div>
+}
+@if (loading()) {
+  <div class="banner">Loading your reservations…</div>
+}
+@if (!loading() && reservations().length === 0) {
+  <p class="empty">No reservations from {{ from() }} onward.</p>
+}
+
+@if (reservations().length > 0) {
+  <div class="grid-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Court</th>
+          <th>Players</th>
+          <th>Price</th>
+          <th>Paid</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of reservations(); track r.id) {
+          <tr>
+            <td class="nowrap">{{ weekday(r.date) }} {{ r.date }}</td>
+            <td class="nowrap">
+              {{ r.fromTime }}–{{ r.toTime }}
+              @if (r.recurring) { <span class="tag" title="Recurring series">↻</span> }
+            </td>
+            <td>{{ r.courtName || r.courtId }}</td>
+            <td>{{ r.players.join(', ') }}</td>
+            <td>{{ r.totalPrice }}</td>
+            <td>
+              @if (r.isPaid) {
+                <span class="pill paid">Paid</span>
+              } @else if (r.needsPayment) {
+                <span class="pill due">Due</span>
+              } @else {
+                <span class="pill">—</span>
+              }
+            </td>
+            <td><button class="cancel" (click)="cancel(r)">Cancel</button></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

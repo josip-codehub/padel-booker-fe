@@ -5,6 +5,7 @@ import {
   BookingAttempt,
   CreateBookingRequest,
   Health,
+  MyReservation,
   QueuedBooking,
   SettingsView,
   Week,
@@ -42,6 +43,15 @@ export class ApiService {
 
   recentAttempts(): Observable<BookingAttempt[]> {
     return this.http.get<BookingAttempt[]>(`${BASE}/attempts`);
+  }
+
+  myReservations(from?: string): Observable<MyReservation[]> {
+    const params: Record<string, string> = from ? { from } : {};
+    return this.http.get<MyReservation[]>(`${BASE}/my-reservations`, { params });
+  }
+
+  cancelReservation(id: number): Observable<unknown> {
+    return this.http.delete(`${BASE}/my-reservations/${id}`);
   }
 
   getSettings(): Observable<SettingsView> {

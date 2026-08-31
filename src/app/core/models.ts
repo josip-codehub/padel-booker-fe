@@ -69,6 +69,21 @@ export interface SettingsView {
   lastValidatedAt: string | null;
 }
 
+export interface MyReservation {
+  id: number;
+  courtId: number;
+  courtName: string | null;
+  date: string;
+  fromTime: string | null;
+  toTime: string | null;
+  players: string[];
+  totalPrice: number | null;
+  isPaid: boolean;
+  needsPayment: boolean;
+  createdByMe: boolean;
+  recurring: boolean;
+}
+
 export interface CreateBookingRequest {
   courtId: number;
   courtName?: string | null;
