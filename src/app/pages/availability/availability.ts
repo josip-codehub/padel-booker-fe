@@ -152,10 +152,13 @@ export class Availability implements OnInit {
     });
   }
 
-  private isPast(date: string, hhmm: number): boolean {
+  private isPast(date: string, timeCode: number): boolean {
+    // timeCode is decimal-hours x100: 1450 -> 14:30, 700 -> 07:00
     const now = new Date();
     const [y, m, d] = date.split('-').map(Number);
-    const slot = new Date(y, m - 1, d, Math.floor(hhmm / 100), hhmm % 100);
+    const hour = Math.floor(timeCode / 100);
+    const minute = Math.round((timeCode % 100) * 0.6);
+    const slot = new Date(y, m - 1, d, hour, minute);
     return slot.getTime() < now.getTime();
   }
 
