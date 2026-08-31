@@ -10,6 +10,8 @@
 
 <div class="legend">
   <span class="chip free">Available</span>
+  <span class="chip mine">Yours</span>
+  <span class="chip queued">Queued</span>
   <span class="chip booked">Booked</span>
   <span class="chip past">Past</span>
   <span class="chip closed">Closed</span>
@@ -55,6 +57,10 @@
                     <button class="slot" (click)="book(court, row, cell)" [title]="row.beyondWindow ? 'Schedule for midnight' : 'Reserve now'">
                       <span class="price">{{ cell.price }}</span>
                     </button>
+                  } @else if (cell.state === 'mine') {
+                    <span class="mark" title="Reserved by you">✓ you</span>
+                  } @else if (cell.state === 'queued') {
+                    <span class="mark" title="Scheduled in your Queue — auto-books at midnight">⏳</span>
                   }
                 </td>
               }

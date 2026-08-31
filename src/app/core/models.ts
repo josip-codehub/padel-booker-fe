@@ -1,7 +1,9 @@
 export interface Slot {
-  time: number; // HHMM, e.g. 700, 1430
+  time: number; // decimal-hours x100, e.g. 700, 1450
   timeFmt: string; // "07:00"
   booked: boolean;
+  mine: boolean; // booked by me
+  queued: boolean; // future slot already scheduled in my Queue
   price: number | null;
 }
 

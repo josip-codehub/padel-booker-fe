@@ -34,6 +34,8 @@
     border: 1px solid var(--border);
   }
   .chip.free { background: var(--free); }
+  .chip.mine { background: #d6f5df; border-color: #34c759; color: #0a7d2c; }
+  .chip.queued { background: #fff2cc; border-color: #ff9500; color: #8a6d00; }
   .chip.booked { background: var(--booked); color: #fff; }
   .chip.past { background: var(--past); }
   .chip.closed { background: var(--closed); }
@@ -103,6 +105,20 @@ table.grid {
   td.booked { background: var(--booked); }
   td.past { background: var(--past); }
   td.closed { background: var(--closed); }
+  td.mine { background: #34c759; }
+  td.queued { background: #ffcf5c; }
+
+  .mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #fff;
+  }
+  td.queued .mark { color: #7a5b00; }
 
   button.slot {
     width: 100%;

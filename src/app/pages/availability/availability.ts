@@ -5,7 +5,7 @@ import { ConfirmService } from '../../core/confirm.service';
 import { CreateBookingRequest, Week } from '../../core/models';
 import { addDays, dayMonthLabel, daysUntil, todayIso, weekdayLabel } from '../../core/date-utils';
 
-type CellState = 'closed' | 'booked' | 'free' | 'past';
+type CellState = 'closed' | 'booked' | 'free' | 'past' | 'mine' | 'queued';
 
 interface CellView {
   time: number;
@@ -154,7 +154,9 @@ export class Availability implements OnInit {
           if (!slot) {
             state = 'closed';
           } else if (slot.booked) {
-            state = 'booked';
+            state = slot.mine ? 'mine' : 'booked';
+          } else if (slot.queued) {
+            state = 'queued';
           } else if (this.isPast(day.date, t.time)) {
             state = 'past';
           } else {
