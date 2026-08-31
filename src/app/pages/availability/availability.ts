@@ -2,7 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/api.service';
 import { ConfirmService } from '../../core/confirm.service';
-import { CreateBookingRequest, Week } from '../../core/models';
+import { CreateBookingRequest, SlotPlayer, Week } from '../../core/models';
 import { addDays, dayMonthLabel, daysUntil, todayIso, weekdayLabel } from '../../core/date-utils';
 
 type CellState = 'closed' | 'booked' | 'free' | 'past' | 'mine' | 'queued';
@@ -12,6 +12,16 @@ interface CellView {
   timeFmt: string;
   state: CellState;
   price: number | null;
+  bookedBy: string | null;
+  shortName: string | null;
+  players: SlotPlayer[];
+}
+
+interface HoverInfo {
+  bookedBy: string | null;
+  players: SlotPlayer[];
+  x: number;
+  y: number;
 }
 
 interface RowView {
@@ -45,6 +55,7 @@ export class Availability implements OnInit {
   loading = signal<boolean>(false);
   error = signal<string | null>(null);
   message = signal<string | null>(null);
+  hovered = signal<HoverInfo | null>(null);
 
   ngOnInit(): void {
     this.load();
@@ -163,7 +174,16 @@ export class Availability implements OnInit {
             state = 'free';
             price = slot.price;
           }
-          return { time: t.time, timeFmt: t.timeFmt, state, price };
+          const bookedBy = slot?.bookedBy ?? null;
+          return {
+            time: t.time,
+            timeFmt: t.timeFmt,
+            state,
+            price,
+            bookedBy,
+            shortName: bookedBy ? bookedBy.split(' ')[0] : null,
+            players: slot?.players ?? [],
+          };
         });
         return {
           date: day.date,
@@ -176,6 +196,19 @@ export class Availability implements OnInit {
 
       return { courtId: c.courtId, courtName: c.courtName, type: c.type, times, rows };
     });
+  }
+
+  onEnter(cell: CellView, event: MouseEvent): void {
+    if (cell.state !== 'booked' && cell.state !== 'mine') return;
+    if (!cell.bookedBy && cell.players.length === 0) return;
+    const el = event.currentTarget as HTMLElement;
+    const rect = el.getBoundingClientRect();
+    const x = Math.min(rect.left, window.innerWidth - 240);
+    this.hovered.set({ bookedBy: cell.bookedBy, players: cell.players, x, y: rect.bottom + 6 });
+  }
+
+  onLeave(): void {
+    this.hovered.set(null);
   }
 
   private isPast(date: string, timeCode: number): boolean {

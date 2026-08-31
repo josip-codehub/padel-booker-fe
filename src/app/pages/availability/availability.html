@@ -52,15 +52,17 @@
                 }
               </th>
               @for (cell of row.cells; track cell.time) {
-                <td [class]="cell.state">
+                <td [class]="cell.state" (mouseenter)="onEnter(cell, $event)" (mouseleave)="onLeave()">
                   @if (cell.state === 'free') {
                     <button class="slot" (click)="book(court, row, cell)" [title]="row.beyondWindow ? 'Schedule for midnight' : 'Reserve now'">
                       <span class="price">{{ cell.price }}</span>
                     </button>
                   } @else if (cell.state === 'mine') {
-                    <span class="mark" title="Reserved by you">✓ you</span>
+                    <span class="mark">✓ you</span>
                   } @else if (cell.state === 'queued') {
                     <span class="mark" title="Scheduled in your Queue — auto-books at midnight">⏳</span>
+                  } @else if (cell.state === 'booked') {
+                    <span class="mark bookedname">{{ cell.shortName || '—' }}</span>
                   }
                 </td>
               }
@@ -70,4 +72,28 @@
       </table>
     </div>
   </section>
+}
+
+@if (hovered(); as h) {
+  <div class="players-pop" [style.left.px]="h.x" [style.top.px]="h.y">
+    @if (h.bookedBy) {
+      <div class="pop-title">Booked by {{ h.bookedBy }}</div>
+    }
+    @if (h.players.length > 0) {
+      <ul>
+        @for (p of h.players; track p.name) {
+          <li>
+            @if (p.image) {
+              <img [src]="p.image" alt="" referrerpolicy="no-referrer" />
+            } @else {
+              <span class="avatar-fallback">{{ p.name.charAt(0) }}</span>
+            }
+            <span class="pname">{{ p.name }}</span>
+          </li>
+        }
+      </ul>
+    } @else {
+      <div class="pop-empty">No players listed for this booking.</div>
+    }
+  </div>
 }

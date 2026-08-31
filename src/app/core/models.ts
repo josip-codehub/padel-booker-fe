@@ -1,3 +1,8 @@
+export interface SlotPlayer {
+  name: string;
+  image: string | null;
+}
+
 export interface Slot {
   time: number; // decimal-hours x100, e.g. 700, 1450
   timeFmt: string; // "07:00"
@@ -5,6 +10,8 @@ export interface Slot {
   mine: boolean; // booked by me
   queued: boolean; // future slot already scheduled in my Queue
   price: number | null;
+  bookedBy: string | null; // who created the reservation
+  players: SlotPlayer[]; // participants on a booked slot
 }
 
 export interface CourtDay {
