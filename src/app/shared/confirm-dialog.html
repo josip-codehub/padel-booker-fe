@@ -1,0 +1,16 @@
+@if (svc.state(); as s) {
+  <div class="backdrop" (click)="cancel()">
+    <div class="modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      @if (s.title) {
+        <h3>{{ s.title }}</h3>
+      }
+      <p class="message">{{ s.message }}</p>
+      <div class="actions">
+        <button class="btn cancel" (click)="cancel()">{{ s.cancelText || 'Cancel' }}</button>
+        <button class="btn confirm" [class.danger]="s.danger" (click)="ok()">
+          {{ s.confirmText || 'Confirm' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

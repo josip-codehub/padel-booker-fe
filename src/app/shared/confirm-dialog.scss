@@ -1,0 +1,62 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  width: 100%;
+  max-width: 420px;
+  padding: 1.25rem 1.4rem 1.1rem;
+
+  h3 {
+    margin: 0 0 0.6rem;
+    font-size: 1.15rem;
+  }
+
+  .message {
+    margin: 0 0 1.2rem;
+    white-space: pre-line;
+    line-height: 1.45;
+    color: #333;
+  }
+
+  .actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+  }
+
+  .btn {
+    padding: 0.55rem 1.1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    font-size: 0.95rem;
+    background: #fff;
+
+    &.cancel:hover {
+      background: #f2f2f2;
+    }
+    &.confirm {
+      background: #0a7d2c;
+      color: #fff;
+      border-color: #0a7d2c;
+      &:hover {
+        filter: brightness(1.05);
+      }
+      &.danger {
+        background: #ff3b30;
+        border-color: #ff3b30;
+      }
+    }
+  }
+}

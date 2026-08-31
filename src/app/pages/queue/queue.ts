@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { ApiService } from '../../core/api.service';
+import { ConfirmService } from '../../core/confirm.service';
 import { QueuedBooking } from '../../core/models';
 
 @Component({
@@ -11,6 +12,7 @@ import { QueuedBooking } from '../../core/models';
 })
 export class Queue implements OnInit {
   private api = inject(ApiService);
+  private confirm = inject(ConfirmService);
 
   bookings = signal<QueuedBooking[]>([]);
   loading = signal(false);
@@ -35,8 +37,15 @@ export class Queue implements OnInit {
     });
   }
 
-  cancel(b: QueuedBooking): void {
-    if (!confirm(`Cancel queued booking #${b.id}?`)) return;
+  async cancel(b: QueuedBooking): Promise<void> {
+    const ok = await this.confirm.ask({
+      title: 'Cancel queued booking',
+      message: `Cancel queued booking #${b.id}?\n${b.courtName || b.courtId} — ${b.playDate} ${b.slotTimeFmt}`,
+      confirmText: 'Cancel booking',
+      cancelText: 'Keep',
+      danger: true,
+    });
+    if (!ok) return;
     this.api.cancelBooking(b.id).subscribe({
       next: () => this.load(),
       error: (e) => this.error.set(this.errMsg(e)),

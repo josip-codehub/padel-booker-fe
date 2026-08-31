@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/api.service';
+import { ConfirmService } from '../../core/confirm.service';
 import { MyReservation } from '../../core/models';
 import { todayIso, weekdayLabel } from '../../core/date-utils';
 
@@ -12,6 +13,7 @@ import { todayIso, weekdayLabel } from '../../core/date-utils';
 })
 export class MyReservations implements OnInit {
   private api = inject(ApiService);
+  private confirm = inject(ConfirmService);
 
   from = signal<string>(todayIso());
   reservations = signal<MyReservation[]>([]);
@@ -49,9 +51,16 @@ export class MyReservations implements OnInit {
     return weekdayLabel(date);
   }
 
-  cancel(r: MyReservation): void {
+  async cancel(r: MyReservation): Promise<void> {
     const when = `${r.courtName} — ${r.date} ${r.fromTime}`;
-    if (!confirm(`Cancel this reservation on Sporty Plus?\n\n${when}\n\nThis cannot be undone.`)) return;
+    const ok = await this.confirm.ask({
+      title: 'Cancel reservation',
+      message: `Cancel this reservation on Sporty Plus?\n\n${when}\n\nThis cannot be undone.`,
+      confirmText: 'Cancel reservation',
+      cancelText: 'Keep',
+      danger: true,
+    });
+    if (!ok) return;
     this.message.set(null);
     this.error.set(null);
     this.api.cancelReservation(r.id).subscribe({

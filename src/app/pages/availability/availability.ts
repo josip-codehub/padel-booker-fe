@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/api.service';
+import { ConfirmService } from '../../core/confirm.service';
 import { CreateBookingRequest, Week } from '../../core/models';
 import { addDays, dayMonthLabel, daysUntil, todayIso, weekdayLabel } from '../../core/date-utils';
 
@@ -37,6 +38,7 @@ interface CourtView {
 })
 export class Availability implements OnInit {
   private api = inject(ApiService);
+  private confirm = inject(ConfirmService);
 
   weekStart = signal<string>(todayIso());
   courts = signal<CourtView[]>([]);
@@ -82,7 +84,7 @@ export class Availability implements OnInit {
     }
   }
 
-  book(court: CourtView, row: RowView, cell: CellView): void {
+  async book(court: CourtView, row: RowView, cell: CellView): Promise<void> {
     if (cell.state !== 'free') return;
     const when = `${court.courtName} — ${row.weekday} ${row.dayMonth} at ${cell.timeFmt}`;
     const req: CreateBookingRequest = {
@@ -96,9 +98,12 @@ export class Availability implements OnInit {
 
     if (row.beyondWindow) {
       // More than a week out → schedule the midnight booking.
-      if (!confirm(`Schedule booking?\n\n${when}\nPrice: ${cell.price ?? '?'}\n\nMore than a week out — it will be auto-booked at midnight when the day opens.`)) {
-        return;
-      }
+      const ok = await this.confirm.ask({
+        title: 'Schedule booking',
+        message: `${when}\nPrice: ${cell.price ?? '?'}\n\nThis is more than a week out — it will be auto-booked at midnight when the day opens.`,
+        confirmText: 'Schedule',
+      });
+      if (!ok) return;
       this.api.createBooking(req).subscribe({
         next: (b) => {
           this.message.set(`Queued #${b.id}: ${when}. Fires at ${new Date(b.targetFireAt).toLocaleString()}.`);
@@ -108,9 +113,12 @@ export class Availability implements OnInit {
       });
     } else {
       // Already inside the window → reserve immediately.
-      if (!confirm(`Reserve now?\n\n${when}\nPrice: ${cell.price ?? '?'}\n\nThis books the court immediately.`)) {
-        return;
-      }
+      const ok = await this.confirm.ask({
+        title: 'Reserve now',
+        message: `${when}\nPrice: ${cell.price ?? '?'}\n\nThis books the court immediately.`,
+        confirmText: 'Reserve',
+      });
+      if (!ok) return;
       this.api.reserveNow(req).subscribe({
         next: (res) => {
           if (res.success) {

@@ -25,3 +25,12 @@
 <main>
   <router-outlet />
 </main>
+
+@if (loading()) {
+  <div class="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Talking to Sporty Plus…</div>
+  </div>
+}
+
+<app-confirm-dialog />
