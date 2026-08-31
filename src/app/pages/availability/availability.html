@@ -52,7 +52,7 @@
               @for (cell of row.cells; track cell.time) {
                 <td [class]="cell.state">
                   @if (cell.state === 'free') {
-                    <button class="slot" (click)="queue(court, row, cell)" title="Queue this slot">
+                    <button class="slot" (click)="book(court, row, cell)" [title]="row.beyondWindow ? 'Schedule for midnight' : 'Reserve now'">
                       <span class="price">{{ cell.price }}</span>
                     </button>
                   }

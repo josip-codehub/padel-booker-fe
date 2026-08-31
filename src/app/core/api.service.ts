@@ -7,6 +7,7 @@ import {
   Health,
   MyReservation,
   QueuedBooking,
+  ReserveNowResult,
   SettingsView,
   Week,
 } from './models';
@@ -31,6 +32,10 @@ export class ApiService {
 
   createBooking(req: CreateBookingRequest): Observable<QueuedBooking> {
     return this.http.post<QueuedBooking>(`${BASE}/bookings`, req);
+  }
+
+  reserveNow(req: CreateBookingRequest): Observable<ReserveNowResult> {
+    return this.http.post<ReserveNowResult>(`${BASE}/bookings/now`, req);
   }
 
   cancelBooking(id: number): Observable<QueuedBooking> {

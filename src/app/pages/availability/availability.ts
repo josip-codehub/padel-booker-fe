@@ -82,14 +82,9 @@ export class Availability implements OnInit {
     }
   }
 
-  queue(court: CourtView, row: RowView, cell: CellView): void {
+  book(court: CourtView, row: RowView, cell: CellView): void {
     if (cell.state !== 'free') return;
     const when = `${court.courtName} — ${row.weekday} ${row.dayMonth} at ${cell.timeFmt}`;
-    const info = row.beyondWindow
-      ? `This is more than a week out. It will be auto-booked at midnight when the day opens.`
-      : `This day is already open, so it will be booked immediately.`;
-    if (!confirm(`Queue booking?\n\n${when}\nPrice: ${cell.price ?? '?'}\n\n${info}`)) return;
-
     const req: CreateBookingRequest = {
       courtId: court.courtId,
       courtName: court.courtName,
@@ -98,15 +93,36 @@ export class Availability implements OnInit {
     };
     this.message.set(null);
     this.error.set(null);
-    this.api.createBooking(req).subscribe({
-      next: (b) => {
-        this.message.set(
-          `Queued #${b.id}: ${when}. Fires at ${new Date(b.targetFireAt).toLocaleString()}.`,
-        );
-        this.load();
-      },
-      error: (e) => this.error.set(this.errMsg(e)),
-    });
+
+    if (row.beyondWindow) {
+      // More than a week out → schedule the midnight booking.
+      if (!confirm(`Schedule booking?\n\n${when}\nPrice: ${cell.price ?? '?'}\n\nMore than a week out — it will be auto-booked at midnight when the day opens.`)) {
+        return;
+      }
+      this.api.createBooking(req).subscribe({
+        next: (b) => {
+          this.message.set(`Queued #${b.id}: ${when}. Fires at ${new Date(b.targetFireAt).toLocaleString()}.`);
+          this.load();
+        },
+        error: (e) => this.error.set(this.errMsg(e)),
+      });
+    } else {
+      // Already inside the window → reserve immediately.
+      if (!confirm(`Reserve now?\n\n${when}\nPrice: ${cell.price ?? '?'}\n\nThis books the court immediately.`)) {
+        return;
+      }
+      this.api.reserveNow(req).subscribe({
+        next: (res) => {
+          if (res.success) {
+            this.message.set(`Reserved: ${when}. ${res.message}`);
+          } else {
+            this.error.set(`Could not reserve ${when}: ${res.message}`);
+          }
+          this.load();
+        },
+        error: (e) => this.error.set(this.errMsg(e)),
+      });
+    }
   }
 
   private buildView(w: Week): CourtView[] {

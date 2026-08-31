@@ -69,6 +69,13 @@ export interface SettingsView {
   lastValidatedAt: string | null;
 }
 
+export interface ReserveNowResult {
+  success: boolean;
+  reservationId: number | null;
+  price: number | null;
+  message: string;
+}
+
 export interface MyReservation {
   id: number;
   courtId: number;
