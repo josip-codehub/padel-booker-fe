@@ -5,9 +5,11 @@ import {
   BookingAttempt,
   CreateBookingRequest,
   Health,
+  ManagedUser,
   MyReservation,
   QueuedBooking,
   ReserveNowResult,
+  Role,
   SettingsView,
   Week,
 } from './models';
@@ -57,6 +59,23 @@ export class ApiService {
 
   cancelReservation(id: number): Observable<unknown> {
     return this.http.delete(`${BASE}/my-reservations/${id}`);
+  }
+
+  // --- admin user management ---
+  listUsers(): Observable<ManagedUser[]> {
+    return this.http.get<ManagedUser[]>(`${BASE}/admin/users`);
+  }
+
+  createUser(username: string, role: Role): Observable<ManagedUser> {
+    return this.http.post<ManagedUser>(`${BASE}/admin/users`, { username, role });
+  }
+
+  deleteUser(id: number): Observable<unknown> {
+    return this.http.delete(`${BASE}/admin/users/${id}`);
+  }
+
+  resetUserPassword(id: number): Observable<{ temporaryPassword: string }> {
+    return this.http.post<{ temporaryPassword: string }>(`${BASE}/admin/users/${id}/reset-password`, {});
   }
 
   getSettings(): Observable<SettingsView> {

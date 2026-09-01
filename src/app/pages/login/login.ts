@@ -24,8 +24,17 @@ export class Login {
     this.auth.login(this.username(), this.password()).subscribe({
       next: (res) => {
         this.auth.setToken(res.token);
-        this.submitting.set(false);
-        this.router.navigateByUrl('/availability');
+        // Load role + mustChangePassword (drives the forced modal), then enter the app.
+        this.auth.loadAccount().subscribe({
+          next: () => {
+            this.submitting.set(false);
+            this.router.navigateByUrl('/availability');
+          },
+          error: () => {
+            this.submitting.set(false);
+            this.router.navigateByUrl('/availability');
+          },
+        });
       },
       error: (e) => {
         this.submitting.set(false);

@@ -5,7 +5,7 @@ import { ConfirmService } from '../../core/confirm.service';
 import { CreateBookingRequest, SlotPlayer, Week } from '../../core/models';
 import { addDays, dayMonthLabel, daysUntil, todayIso, weekdayLabel } from '../../core/date-utils';
 
-type CellState = 'closed' | 'booked' | 'free' | 'past' | 'mine' | 'queued';
+type CellState = 'closed' | 'booked' | 'free' | 'past' | 'mine' | 'queued-mine' | 'queued-other';
 
 interface CellView {
   time: number;
@@ -14,11 +14,12 @@ interface CellView {
   price: number | null;
   bookedBy: string | null;
   shortName: string | null;
+  queuedBy: string | null;
   players: SlotPlayer[];
 }
 
 interface HoverInfo {
-  bookedBy: string | null;
+  heading: string | null;
   players: SlotPlayer[];
   x: number;
   y: number;
@@ -167,7 +168,7 @@ export class Availability implements OnInit {
           } else if (slot.booked) {
             state = slot.mine ? 'mine' : 'booked';
           } else if (slot.queued) {
-            state = 'queued';
+            state = slot.queuedByMe ? 'queued-mine' : 'queued-other';
           } else if (this.isPast(day.date, t.time)) {
             state = 'past';
           } else {
@@ -182,6 +183,7 @@ export class Availability implements OnInit {
             price,
             bookedBy,
             shortName: bookedBy ? bookedBy.split(' ')[0] : null,
+            queuedBy: slot?.queuedBy ?? null,
             players: slot?.players ?? [],
           };
         });
@@ -199,12 +201,21 @@ export class Availability implements OnInit {
   }
 
   onEnter(cell: CellView, event: MouseEvent): void {
-    if (cell.state !== 'booked' && cell.state !== 'mine') return;
-    if (!cell.bookedBy && cell.players.length === 0) return;
+    let heading: string | null = null;
+    let players: SlotPlayer[] = [];
+    if (cell.state === 'booked' || cell.state === 'mine') {
+      if (!cell.bookedBy && cell.players.length === 0) return;
+      heading = cell.bookedBy ? `Booked by ${cell.bookedBy}` : null;
+      players = cell.players;
+    } else if (cell.state === 'queued-mine' || cell.state === 'queued-other') {
+      heading = `Scheduled by ${cell.queuedBy ?? 'someone'}`;
+    } else {
+      return;
+    }
     const el = event.currentTarget as HTMLElement;
     const rect = el.getBoundingClientRect();
     const x = Math.min(rect.left, window.innerWidth - 240);
-    this.hovered.set({ bookedBy: cell.bookedBy, players: cell.players, x, y: rect.bottom + 6 });
+    this.hovered.set({ heading, players, x, y: rect.bottom + 6 });
   }
 
   onLeave(): void {

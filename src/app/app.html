@@ -7,6 +7,9 @@
       <a routerLink="/queue" routerLinkActive="active">Queue</a>
       <a routerLink="/history" routerLinkActive="active">History</a>
       <a routerLink="/settings" routerLinkActive="active">Settings</a>
+      @if (isAdmin()) {
+        <a routerLink="/users" routerLinkActive="active">Users</a>
+      }
     </nav>
     <button class="health" (click)="refreshHealth()" title="Click to re-check">
       @if (health(); as h) {
@@ -21,6 +24,7 @@
         <span class="dot"></span> …
       }
     </button>
+    <button class="logout" (click)="changePassword()" title="Change your password">Password</button>
     <button class="logout" (click)="logout()" title="Sign out">Sign out</button>
   }
 </header>
@@ -37,3 +41,4 @@
 }
 
 <app-confirm-dialog />
+<app-change-password-dialog />

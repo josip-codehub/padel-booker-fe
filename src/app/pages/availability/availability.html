@@ -10,12 +10,13 @@
 
 <div class="legend">
   <span class="chip free">Available</span>
-  <span class="chip mine">Yours</span>
-  <span class="chip queued">Queued</span>
+  <span class="chip mine">Yours (booked)</span>
+  <span class="chip queued">Queued (you)</span>
+  <span class="chip queued-other">Queued (others)</span>
   <span class="chip booked">Booked</span>
   <span class="chip past">Past</span>
   <span class="chip closed">Closed</span>
-  <span class="hint">Rows marked ✦ are more than a week out — they auto-book at midnight.</span>
+  <span class="hint">Rows marked ✦ are more than a week out — they auto-book at midnight. Hover a taken slot to see who.</span>
 </div>
 
 @if (message()) {
@@ -59,8 +60,10 @@
                     </button>
                   } @else if (cell.state === 'mine') {
                     <span class="mark">✓ you</span>
-                  } @else if (cell.state === 'queued') {
-                    <span class="mark" title="Scheduled in your Queue — auto-books at midnight">⏳</span>
+                  } @else if (cell.state === 'queued-mine') {
+                    <span class="mark" title="Scheduled by you — auto-books at midnight">⏳ you</span>
+                  } @else if (cell.state === 'queued-other') {
+                    <span class="mark qother">{{ cell.queuedBy }}</span>
                   } @else if (cell.state === 'booked') {
                     <span class="mark bookedname">{{ cell.shortName || '—' }}</span>
                   }
@@ -76,8 +79,8 @@
 
 @if (hovered(); as h) {
   <div class="players-pop" [style.left.px]="h.x" [style.top.px]="h.y">
-    @if (h.bookedBy) {
-      <div class="pop-title">Booked by {{ h.bookedBy }}</div>
+    @if (h.heading) {
+      <div class="pop-title">{{ h.heading }}</div>
     }
     @if (h.players.length > 0) {
       <ul>
@@ -92,8 +95,6 @@
           </li>
         }
       </ul>
-    } @else {
-      <div class="pop-empty">No players listed for this booking.</div>
     }
   </div>
 }

@@ -1,15 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
+import { CurrentUser, LoginResponse } from './models';
 
 const TOKEN_KEY = 'appToken';
-
-interface LoginResponse {
-  token: string;
-  username: string;
-  expiresAt: string;
-}
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -17,7 +12,15 @@ export class AuthService {
   private router = inject(Router);
 
   private _token = signal<string | null>(this.read());
+  readonly currentUser = signal<CurrentUser | null>(null);
+
   readonly authenticated = computed(() => !!this._token());
+  readonly isAdmin = computed(() => this.currentUser()?.role === 'ADMIN');
+
+  /** Drives the forced (blocking) password-change modal. */
+  readonly passwordChangeRequired = signal(false);
+  /** Drives the voluntary (self-initiated) password-change modal. */
+  readonly voluntaryChangeOpen = signal(false);
 
   token(): string | null {
     return this._token();
@@ -36,6 +39,35 @@ export class AuthService {
     this._token.set(token);
   }
 
+  /** Load the current user's profile (role, mustChangePassword, sportyLinked). */
+  loadAccount(): Observable<CurrentUser> {
+    return this.http.get<CurrentUser>('/api/account').pipe(
+      tap((u) => {
+        this.currentUser.set(u);
+        this.passwordChangeRequired.set(u.mustChangePassword);
+      }),
+    );
+  }
+
+  changePassword(currentPassword: string | null, newPassword: string): Observable<unknown> {
+    return this.http.post('/api/account/password', { currentPassword, newPassword });
+  }
+
+  /** Called by the interceptor when the API says a password change is required. */
+  requirePasswordChange(): void {
+    this.passwordChangeRequired.set(true);
+  }
+
+  openVoluntaryChange(): void {
+    this.voluntaryChangeOpen.set(true);
+  }
+
+  onPasswordChanged(): void {
+    this.passwordChangeRequired.set(false);
+    this.voluntaryChangeOpen.set(false);
+    this.loadAccount().subscribe({ next: () => {}, error: () => {} });
+  }
+
   logout(): void {
     try {
       localStorage.removeItem(TOKEN_KEY);
@@ -43,6 +75,9 @@ export class AuthService {
       /* ignore */
     }
     this._token.set(null);
+    this.currentUser.set(null);
+    this.passwordChangeRequired.set(false);
+    this.voluntaryChangeOpen.set(false);
     this.router.navigateByUrl('/login');
   }
 

@@ -7,11 +7,40 @@ export interface Slot {
   time: number; // decimal-hours x100, e.g. 700, 1450
   timeFmt: string; // "07:00"
   booked: boolean;
-  mine: boolean; // booked by me
-  queued: boolean; // future slot already scheduled in my Queue
+  mine: boolean; // booked by me (on Sporty)
+  queued: boolean; // future slot already scheduled in the Queue by any app user
+  queuedByMe: boolean;
+  queuedBy: string | null; // app username who scheduled it
   price: number | null;
   bookedBy: string | null; // who created the reservation
   players: SlotPlayer[]; // participants on a booked slot
+}
+
+export type Role = 'USER' | 'ADMIN';
+
+export interface CurrentUser {
+  id: number;
+  username: string;
+  role: Role;
+  mustChangePassword: boolean;
+  sportyLinked: boolean;
+}
+
+export interface ManagedUser {
+  id: number;
+  username: string;
+  role: Role;
+  mustChangePassword: boolean;
+  sportyLinked: boolean;
+  createdAt: string;
+}
+
+export interface LoginResponse {
+  token: string;
+  username: string;
+  role: Role;
+  mustChangePassword: boolean;
+  expiresAt: string;
 }
 
 export interface CourtDay {

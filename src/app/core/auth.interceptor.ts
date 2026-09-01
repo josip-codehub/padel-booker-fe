@@ -18,6 +18,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((err: HttpErrorResponse) => {
       if (err.status === 401 && !req.url.includes('/api/app-login')) {
         auth.logout();
+      } else if (err.status === 403 && err.error?.code === 'PASSWORD_CHANGE_REQUIRED') {
+        auth.requirePasswordChange();
       }
       return throwError(() => err);
     }),

@@ -1,0 +1,85 @@
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  h2 { font-size: 1.1rem; margin: 0; }
+  .refresh { margin-left: auto; }
+}
+
+.add {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+  background: var(--panel);
+  margin-bottom: 1rem;
+
+  h3 { margin: 0 0 0.6rem; font-size: 0.95rem; }
+  form {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  input,
+  select {
+    padding: 0.45rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.9rem;
+  }
+  button {
+    padding: 0.45rem 1rem;
+    background: #0a7d2c;
+    color: #fff;
+    border: 0;
+    border-radius: 6px;
+    cursor: pointer;
+    &:disabled { opacity: 0.6; cursor: default; }
+  }
+  .hint { margin: 0.6rem 0 0; font-size: 0.8rem; color: var(--muted); code { background: #e8e8e8; padding: 0 0.25rem; border-radius: 3px; } }
+}
+
+.banner {
+  padding: 0.6rem 0.8rem;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  &.ok { background: #e7f7ec; border-color: #34c759; }
+  &.err { background: #fdecec; border-color: #ff3b30; }
+}
+
+.grid-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.85rem;
+
+  th, td {
+    border-bottom: 1px solid var(--border);
+    padding: 0.5rem 0.7rem;
+    text-align: left;
+  }
+  thead th { background: var(--panel); }
+  .nowrap { white-space: nowrap; }
+  .you { margin-left: 0.4rem; font-size: 0.7rem; color: var(--muted); }
+
+  .role {
+    padding: 0.1rem 0.45rem; border-radius: 999px; font-size: 0.72rem; font-weight: 700;
+    background: #eee; color: #555;
+    &.ADMIN { background: #e0ecff; color: #1f6feb; }
+  }
+
+  .actions { white-space: nowrap; display: flex; gap: 0.8rem; }
+  .link {
+    background: none; border: 0; cursor: pointer; color: #1f6feb; font-size: 0.83rem; padding: 0;
+    &.danger { color: #ff3b30; }
+    &:hover { text-decoration: underline; }
+  }
+}

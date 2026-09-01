@@ -4,11 +4,12 @@ import { ApiService } from './core/api.service';
 import { AuthService } from './core/auth.service';
 import { LoadingService } from './core/loading.service';
 import { Health } from './core/models';
+import { ChangePasswordDialog } from './shared/change-password-dialog';
 import { ConfirmDialog } from './shared/confirm-dialog';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, ConfirmDialog],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, ConfirmDialog, ChangePasswordDialog],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -18,10 +19,14 @@ export class App implements OnInit {
   private auth = inject(AuthService);
   readonly loading = this.loadingSvc.loading;
   readonly authenticated = this.auth.authenticated;
+  readonly isAdmin = this.auth.isAdmin;
   health = signal<Health | null>(null);
 
   ngOnInit(): void {
-    if (this.authenticated()) this.refreshHealth();
+    if (this.authenticated()) {
+      this.auth.loadAccount().subscribe({ next: () => {}, error: () => {} });
+      this.refreshHealth();
+    }
   }
 
   refreshHealth(): void {
@@ -30,6 +35,10 @@ export class App implements OnInit {
       next: (h) => this.health.set(h),
       error: () => this.health.set({ configured: false, tokenValid: false, message: 'backend unreachable' }),
     });
+  }
+
+  changePassword(): void {
+    this.auth.openVoluntaryChange();
   }
 
   logout(): void {

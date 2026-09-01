@@ -1,0 +1,64 @@
+<div class="toolbar">
+  <h2>Users</h2>
+  <button class="refresh" (click)="load()">↻ Refresh</button>
+</div>
+
+<section class="add">
+  <h3>Add user</h3>
+  <form (ngSubmit)="create()">
+    <input type="text" placeholder="username" name="username"
+      [ngModel]="newUsername()" (ngModelChange)="newUsername.set($event)" autocomplete="off" />
+    <select name="role" [ngModel]="newRole()" (ngModelChange)="newRole.set($event)">
+      <option value="USER">User</option>
+      <option value="ADMIN">Admin</option>
+    </select>
+    <button type="submit" [disabled]="creating() || !newUsername().trim()">
+      {{ creating() ? 'Adding…' : 'Add user' }}
+    </button>
+  </form>
+  <p class="hint">New users get the temporary password <code>changeme</code> and must set their own on first login.</p>
+</section>
+
+@if (message()) {
+  <div class="banner ok">{{ message() }}</div>
+}
+@if (error()) {
+  <div class="banner err">{{ error() }}</div>
+}
+@if (loading()) {
+  <div class="banner">Loading…</div>
+}
+
+@if (users().length > 0) {
+  <div class="grid-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Role</th>
+          <th>Sporty linked</th>
+          <th>Password</th>
+          <th>Created</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (u of users(); track u.id) {
+          <tr>
+            <td>{{ u.username }}@if (u.id === myId) { <span class="you">you</span> }</td>
+            <td><span class="role {{ u.role }}">{{ u.role }}</span></td>
+            <td>{{ u.sportyLinked ? 'Yes' : '—' }}</td>
+            <td>{{ u.mustChangePassword ? 'Must set new' : 'Set' }}</td>
+            <td class="nowrap">{{ u.createdAt | date: 'd MMM y' }}</td>
+            <td class="actions">
+              <button class="link" (click)="resetPassword(u)">Reset password</button>
+              @if (u.id !== myId) {
+                <button class="link danger" (click)="remove(u)">Delete</button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
