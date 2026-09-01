@@ -1,25 +1,28 @@
 <header class="topbar">
   <div class="brand">🎾 Padel Auto-Booker</div>
-  <nav>
-    <a routerLink="/availability" routerLinkActive="active">Availability</a>
-    <a routerLink="/my-reservations" routerLinkActive="active">My Reservations</a>
-    <a routerLink="/queue" routerLinkActive="active">Queue</a>
-    <a routerLink="/history" routerLinkActive="active">History</a>
-    <a routerLink="/settings" routerLinkActive="active">Settings</a>
-  </nav>
-  <button class="health" (click)="refreshHealth()" title="Click to re-check">
-    @if (health(); as h) {
-      @if (h.tokenValid) {
-        <span class="dot ok"></span> {{ h.user || 'Token OK' }}
-      } @else if (!h.configured) {
-        <span class="dot warn"></span> Not configured
+  @if (authenticated()) {
+    <nav>
+      <a routerLink="/availability" routerLinkActive="active">Availability</a>
+      <a routerLink="/my-reservations" routerLinkActive="active">My Reservations</a>
+      <a routerLink="/queue" routerLinkActive="active">Queue</a>
+      <a routerLink="/history" routerLinkActive="active">History</a>
+      <a routerLink="/settings" routerLinkActive="active">Settings</a>
+    </nav>
+    <button class="health" (click)="refreshHealth()" title="Click to re-check">
+      @if (health(); as h) {
+        @if (h.tokenValid) {
+          <span class="dot ok"></span> {{ h.user || 'Token OK' }}
+        } @else if (!h.configured) {
+          <span class="dot warn"></span> Not configured
+        } @else {
+          <span class="dot err"></span> Token invalid
+        }
       } @else {
-        <span class="dot err"></span> Token invalid
+        <span class="dot"></span> …
       }
-    } @else {
-      <span class="dot"></span> …
-    }
-  </button>
+    </button>
+    <button class="logout" (click)="logout()" title="Sign out">Sign out</button>
+  }
 </header>
 
 <main>

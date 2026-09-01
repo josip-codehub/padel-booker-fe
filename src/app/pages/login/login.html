@@ -1,0 +1,35 @@
+<div class="login-wrap">
+  <form class="card" (ngSubmit)="submit()">
+    <div class="brand">🎾 Padel Auto-Booker</div>
+    <p class="sub">Sign in to continue</p>
+
+    <label>
+      Username
+      <input
+        type="text"
+        name="username"
+        autocomplete="username"
+        [ngModel]="username()"
+        (ngModelChange)="username.set($event)"
+      />
+    </label>
+    <label>
+      Password
+      <input
+        type="password"
+        name="password"
+        autocomplete="current-password"
+        [ngModel]="password()"
+        (ngModelChange)="password.set($event)"
+      />
+    </label>
+
+    @if (error()) {
+      <div class="err">{{ error() }}</div>
+    }
+
+    <button type="submit" [disabled]="submitting()">
+      {{ submitting() ? 'Signing in…' : 'Sign in' }}
+    </button>
+  </form>
+</div>

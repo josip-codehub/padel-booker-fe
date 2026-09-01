@@ -25,6 +25,17 @@
     }
   }
 
+  .logout {
+    background: rgba(255, 255, 255, 0.12);
+    border: 0;
+    color: #fff;
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    &:hover { background: rgba(255, 255, 255, 0.22); }
+  }
+
   .health {
     margin-left: auto;
     display: flex;
