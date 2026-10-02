@@ -68,6 +68,32 @@ main {
   margin: 0 auto;
 }
 
+/* Mobile: brand + account controls on top, nav becomes a full-width scrollable strip. */
+@media (max-width: 760px) {
+  .topbar {
+    flex-wrap: wrap;
+    gap: 0.4rem 0.6rem;
+    padding: 0.6rem 0.9rem;
+
+    .brand { font-size: 1rem; flex: 1 1 auto; }
+
+    nav {
+      order: 5;
+      flex-basis: 100%;
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 0.15rem;
+      a { white-space: nowrap; }
+    }
+
+    .health { margin-left: auto; order: 2; }
+    .logout { order: 3; }
+  }
+
+  main { padding: 0.9rem; }
+}
+
 .loading-overlay {
   position: fixed;
   inset: 0;

@@ -56,3 +56,46 @@ h2 { font-size: 1.1rem; }
   max-width: 560px;
   margin-top: 1.5rem;
 }
+
+.clubs {
+  margin-top: 2rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+
+  .clubs-head {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    h3 { margin: 0; font-size: 1rem; }
+    .refresh {
+      margin-left: auto;
+      padding: 0.4rem 0.8rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: transparent;
+      cursor: pointer;
+    }
+  }
+  .note { margin-top: 0.5rem; }
+
+  .club-block {
+    margin-top: 1rem;
+    .club-name {
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+      small { color: var(--muted); font-weight: 400; }
+    }
+    .court-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.2rem;
+    }
+    .court-opt {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.88rem;
+    }
+    .muted { color: var(--muted); font-size: 0.85rem; }
+  }
+}

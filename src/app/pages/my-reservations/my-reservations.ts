@@ -63,7 +63,7 @@ export class MyReservations implements OnInit {
     if (!ok) return;
     this.message.set(null);
     this.error.set(null);
-    this.api.cancelReservation(r.id).subscribe({
+    this.api.cancelReservation(r.id, r.clubId).subscribe({
       next: () => {
         this.message.set(`Cancelled ${when}.`);
         this.load();

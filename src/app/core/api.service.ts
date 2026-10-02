@@ -2,8 +2,12 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
+  AvailabilityPrefs,
   BookingAttempt,
+  ClubView,
+  CourtPrefs,
   CreateBookingRequest,
+  FixedBookingView,
   Health,
   ManagedUser,
   MyReservation,
@@ -24,8 +28,27 @@ export class ApiService {
     return this.http.get<Health>(`${BASE}/health`);
   }
 
-  availability(from: string, to: string): Observable<Week> {
-    return this.http.get<Week>(`${BASE}/availability`, { params: { from, to } });
+  // --- clubs ---
+  clubs(): Observable<ClubView[]> {
+    return this.http.get<ClubView[]>(`${BASE}/clubs`);
+  }
+
+  refreshClubs(): Observable<ClubView[]> {
+    return this.http.post<ClubView[]>(`${BASE}/clubs/refresh`, {});
+  }
+
+  /** Raw courts for a club (id + name used by the Settings court filter). */
+  courts(clubId: number): Observable<{ data?: { id: number; name: string }[] } | { id: number; name: string }[]> {
+    return this.http.get<{ data?: { id: number; name: string }[] }>(`${BASE}/courts`, {
+      params: { club: String(clubId) },
+    });
+  }
+
+  availability(clubs: number[], courts: number[], from: string, to: string): Observable<Week> {
+    let params: Record<string, string | string[]> = { from, to };
+    if (clubs.length) params['clubs'] = clubs.map(String);
+    if (courts.length) params['courts'] = courts.map(String);
+    return this.http.get<Week>(`${BASE}/availability`, { params });
   }
 
   listBookings(): Observable<QueuedBooking[]> {
@@ -57,8 +80,35 @@ export class ApiService {
     return this.http.get<MyReservation[]>(`${BASE}/my-reservations`, { params });
   }
 
-  cancelReservation(id: number): Observable<unknown> {
-    return this.http.delete(`${BASE}/my-reservations/${id}`);
+  cancelReservation(id: number, clubId?: number): Observable<unknown> {
+    const params: Record<string, string> = clubId ? { club: String(clubId) } : {};
+    return this.http.delete(`${BASE}/my-reservations/${id}`, { params });
+  }
+
+  // --- preferences ---
+  getCourtPrefs(): Observable<CourtPrefs> {
+    return this.http.get<CourtPrefs>(`${BASE}/account/court-prefs`);
+  }
+
+  putCourtPrefs(prefs: CourtPrefs): Observable<CourtPrefs> {
+    return this.http.put<CourtPrefs>(`${BASE}/account/court-prefs`, prefs);
+  }
+
+  getAvailabilityPrefs(): Observable<AvailabilityPrefs> {
+    return this.http.get<AvailabilityPrefs>(`${BASE}/account/availability-prefs`);
+  }
+
+  putAvailabilityPrefs(prefs: AvailabilityPrefs): Observable<AvailabilityPrefs> {
+    return this.http.put<AvailabilityPrefs>(`${BASE}/account/availability-prefs`, prefs);
+  }
+
+  // --- admin: fixed (weekly) bookings ---
+  listFixedBookings(): Observable<FixedBookingView[]> {
+    return this.http.get<FixedBookingView[]>(`${BASE}/admin/fixed-bookings`);
+  }
+
+  cancelFixedBooking(id: number): Observable<unknown> {
+    return this.http.delete(`${BASE}/admin/fixed-bookings/${id}`);
   }
 
   // --- admin user management ---

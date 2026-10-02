@@ -1,0 +1,56 @@
+<div class="toolbar">
+  <h2>Fixed bookings</h2>
+  <button class="refresh" (click)="load()">↻ Refresh</button>
+</div>
+
+<p class="hint">
+  Standing weekly bookings auto-schedule the same slot every week at the club's midnight opening, and reserve
+  that slot against other users. Create one from the Availability screen (tick “Repeat every week”).
+</p>
+
+@if (message()) {
+  <div class="banner ok">{{ message() }}</div>
+}
+@if (error()) {
+  <div class="banner err">{{ error() }}</div>
+}
+@if (loading()) {
+  <div class="banner">Loading…</div>
+}
+
+@if (rules().length > 0) {
+  <div class="grid-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Club</th>
+          <th>Court</th>
+          <th>Day</th>
+          <th>Time</th>
+          <th>Price</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of rules(); track r.id) {
+          <tr [class.inactive]="!r.active">
+            <td>{{ r.clubName }}</td>
+            <td>{{ r.courtName }}</td>
+            <td>{{ r.weekdayName }}</td>
+            <td class="nowrap">{{ r.slotTimeFmt }}–{{ r.slotEndFmt }}</td>
+            <td>{{ r.price }}</td>
+            <td>{{ r.active ? 'Active' : 'Stopped' }}</td>
+            <td class="actions">
+              @if (r.active) {
+                <button class="link danger" (click)="cancel(r)">Stop</button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+} @else if (!loading()) {
+  <p class="empty">No fixed bookings yet.</p>
+}

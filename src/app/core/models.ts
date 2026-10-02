@@ -43,6 +43,15 @@ export interface LoginResponse {
   expiresAt: string;
 }
 
+export interface ClubView {
+  clubId: number;
+  name: string;
+  slotMinutes: number;
+  minSlots: number;
+  maxSlots: number;
+  maxSpanDays: number;
+}
+
 export interface CourtDay {
   date: string; // ISO date
   slots: Slot[];
@@ -56,25 +65,64 @@ export interface CourtWeek {
   days: CourtDay[];
 }
 
+export interface ClubSection {
+  clubId: number;
+  clubName: string;
+  error: boolean;
+  courts: CourtWeek[];
+}
+
 export interface Week {
   from: string;
   to: string;
-  courts: CourtWeek[];
+  clubs: ClubSection[];
+}
+
+/** Per-user default selection for the availability screen. */
+export interface AvailabilityPrefs {
+  clubs?: number[];
+  courts?: number[];
+}
+
+/** Per-user, per-club court visibility (court ids to hide). */
+export interface CourtPrefs {
+  hidden?: Record<string, number[]>; // clubId -> hidden court ids
+}
+
+export interface FixedBookingView {
+  id: number;
+  clubId: number;
+  clubName: string;
+  courtId: number;
+  courtName: string | null;
+  weekday: number;
+  weekdayName: string;
+  slotTimeFmt: string | null;
+  slotEndFmt: string | null;
+  slotCount: number;
+  price: number | null;
+  active: boolean;
 }
 
 export type BookingStatus = 'PENDING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'CANCELLED';
 
 export interface QueuedBooking {
   id: number;
+  clubId: number | null;
   courtId: number;
   courtName: string | null;
   playDate: string;
   slotTime: number;
   slotTimeFmt: string | null;
+  slotEndFmt: string | null;
+  slotCount: number;
+  slotMinutes: number;
+  slotTimesCsv: string | null;
   price: number | null;
   targetFireAt: string;
   status: BookingStatus;
   createdReservationId: number | null;
+  fixedBookingId: number | null;
   note: string | null;
   createdAt: string;
   updatedAt: string;
@@ -116,6 +164,7 @@ export interface ReserveNowResult {
 
 export interface MyReservation {
   id: number;
+  clubId: number;
   courtId: number;
   courtName: string | null;
   date: string;
@@ -129,9 +178,17 @@ export interface MyReservation {
   recurring: boolean;
 }
 
+export interface BookingSlotInput {
+  time: number;
+  price: number | null;
+}
+
 export interface CreateBookingRequest {
+  clubId: number;
   courtId: number;
   courtName?: string | null;
   playDate: string;
-  slotTime: number;
+  slotMinutes?: number;
+  slots: BookingSlotInput[];
+  repeatWeekly?: boolean;
 }

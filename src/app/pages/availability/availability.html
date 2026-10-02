@@ -1,22 +1,53 @@
 <div class="toolbar">
   <button (click)="prevWeek()" class="nav">‹ Prev</button>
   <label class="datepick">
-    Week starting
+    Week of
     <input type="date" [value]="weekStart()" (change)="onDateChange($any($event.target).value)" />
   </label>
   <button (click)="nextWeek()" class="nav">Next ›</button>
-  <button (click)="load()" class="refresh" title="Reload live data">↻ Refresh</button>
+  <button (click)="load()" class="refresh" title="Reload live data">↻</button>
+  <button (click)="showPicker.set(!showPicker())" class="refresh" title="Choose clubs and courts">⚙ Clubs &amp; courts</button>
 </div>
+
+@if (showPicker()) {
+  <div class="picker">
+    <div class="picker-row">
+      <span class="picker-label">Clubs</span>
+      <div class="chips">
+        @for (c of clubs(); track c.clubId) {
+          <button class="togglechip" [class.on]="selectedClubIds().has(c.clubId)" (click)="toggleClub(c.clubId)">
+            {{ c.name }}
+          </button>
+        }
+      </div>
+    </div>
+    @for (group of courtChoices(); track group.clubId) {
+      @if (selectedClubIds().has(group.clubId) && group.courts.length) {
+        <div class="picker-row">
+          <span class="picker-label">{{ group.clubName }} courts</span>
+          <div class="chips">
+            @for (ct of group.courts; track ct.id) {
+              <button class="togglechip" [class.on]="courtShown(ct.id)" (click)="toggleCourt(ct.id)">{{ ct.name }}</button>
+            }
+          </div>
+        </div>
+      }
+    }
+    <div class="picker-actions">
+      <button class="save" (click)="saveDefaultView()">Save as default view</button>
+      <span class="hint">Tip: hide a club's tennis courts under Settings → Clubs &amp; courts.</span>
+    </div>
+  </div>
+}
 
 <div class="legend">
   <span class="chip free">Available</span>
-  <span class="chip mine">Yours (booked)</span>
-  <span class="chip queued">Queued (you)</span>
-  <span class="chip queued-other">Queued (others)</span>
+  <span class="chip mine">Yours</span>
+  <span class="chip queued">Held (you)</span>
+  <span class="chip queued-other">Held (others)</span>
   <span class="chip booked">Booked</span>
   <span class="chip past">Past</span>
-  <span class="chip closed">Closed</span>
-  <span class="hint">Rows marked ✦ are more than a week out — they auto-book at midnight. Hover a taken slot to see who.</span>
+  <span class="hint">✦ = beyond the booking window; auto-books at midnight when it opens. Hover a taken slot to see who.</span>
 </div>
 
 @if (message()) {
@@ -29,52 +60,61 @@
   <div class="banner">Loading live availability…</div>
 }
 
-@for (court of courts(); track court.courtId) {
-  <section class="court">
-    <h2>{{ court.courtName }} <small>({{ court.type }})</small></h2>
-    <div class="grid-scroll">
-      <table class="grid">
-        <thead>
-          <tr>
-            <th class="daycol">Day</th>
-            @for (t of court.times; track t.time) {
-              <th>{{ t.timeFmt }}</th>
-            }
-          </tr>
-        </thead>
-        <tbody>
-          @for (row of court.rows; track row.date) {
-            <tr>
-              <th class="daycol">
-                <span class="wd">{{ row.weekday }}</span>
-                <span class="dm">{{ row.dayMonth }}</span>
-                @if (row.beyondWindow) {
-                  <span class="star" title="More than a week out — auto-booked at midnight">✦</span>
+@for (section of sections(); track section.clubId) {
+  <div class="club-section">
+    <h1 class="club-title">{{ section.clubName }} <small>· books {{ section.spanDays }} days ahead</small></h1>
+    @if (section.error) {
+      <div class="banner err">Couldn't load {{ section.clubName }} right now.</div>
+    }
+    @for (court of section.courts; track court.courtId) {
+      <section class="court">
+        <h2>{{ court.courtName }} <small>({{ court.slotMinutes }}m slots)</small></h2>
+        <div class="grid-scroll">
+          <table class="grid">
+            <thead>
+              <tr>
+                <th class="daycol">Day</th>
+                @for (t of court.times; track t.time) {
+                  <th>{{ t.timeFmt }}</th>
                 }
-              </th>
-              @for (cell of row.cells; track cell.time) {
-                <td [class]="cell.state" (mouseenter)="onEnter(cell, $event)" (mouseleave)="onLeave()">
-                  @if (cell.state === 'free') {
-                    <button class="slot" (click)="book(court, row, cell)" [title]="row.beyondWindow ? 'Schedule for midnight' : 'Reserve now'">
-                      <span class="price">{{ cell.price }}</span>
-                    </button>
-                  } @else if (cell.state === 'mine') {
-                    <span class="mark">✓ you</span>
-                  } @else if (cell.state === 'queued-mine') {
-                    <span class="mark" title="Scheduled by you — auto-books at midnight">⏳ you</span>
-                  } @else if (cell.state === 'queued-other') {
-                    <span class="mark qother">{{ cell.queuedBy }}</span>
-                  } @else if (cell.state === 'booked') {
-                    <span class="mark bookedname">{{ cell.shortName || '—' }}</span>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of court.rows; track row.date) {
+                <tr>
+                  <th class="daycol">
+                    <span class="wd">{{ row.weekday }}</span>
+                    <span class="dm">{{ row.dayMonth }}</span>
+                    @if (row.beyondWindow) {
+                      <span class="star" title="Beyond the window — auto-booked at midnight">✦</span>
+                    }
+                  </th>
+                  @for (cell of row.cells; track cell.time; let i = $index) {
+                    <td [class]="cell.state" (mouseenter)="onEnter(cell, $event)" (mouseleave)="onLeave()">
+                      @if (cell.state === 'free') {
+                        <button class="slot" (click)="openBooking(court, row, i)"
+                                [title]="row.beyondWindow ? 'Schedule for midnight' : 'Reserve'">
+                          <span class="price">{{ cell.price }}</span>
+                        </button>
+                      } @else if (cell.state === 'mine') {
+                        <span class="mark">✓ you</span>
+                      } @else if (cell.state === 'queued-mine') {
+                        <span class="mark" title="Held by you — auto-books at midnight">⏳ you</span>
+                      } @else if (cell.state === 'queued-other') {
+                        <span class="mark qother">{{ cell.queuedBy }}</span>
+                      } @else if (cell.state === 'booked') {
+                        <span class="mark bookedname">{{ cell.shortName || '—' }}</span>
+                      }
+                    </td>
                   }
-                </td>
+                </tr>
               }
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  </section>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    }
+  </div>
 }
 
 @if (hovered(); as h) {
@@ -96,5 +136,51 @@
         }
       </ul>
     }
+  </div>
+}
+
+@if (dialog(); as d) {
+  <div class="backdrop" (click)="closeDialog()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h3>{{ d.beyondWindow ? 'Schedule booking' : 'Reserve' }}</h3>
+      <p class="when">{{ d.whenLabel }}</p>
+
+      @if (d.maxSlots > d.minSlots) {
+        <label class="len">
+          Length
+          <div class="len-ctrl">
+            <button type="button" (click)="setLength(d.length - 1)" [disabled]="d.length <= d.minSlots">−</button>
+            <span>{{ d.length }} × {{ d.slotMinutes }}m</span>
+            <button type="button" (click)="setLength(d.length + 1)" [disabled]="d.length >= d.maxSlots">+</button>
+          </div>
+        </label>
+      }
+
+      <div class="summary">
+        <div><span>Time</span><strong>{{ dialogRange() }}</strong></div>
+        <div><span>Price</span><strong>{{ dialogTotal() }}</strong></div>
+      </div>
+
+      @if (isAdmin()) {
+        <label class="repeat">
+          <input type="checkbox" [ngModel]="d.repeatWeekly" (ngModelChange)="setRepeat($event)" />
+          Repeat every week until cancelled
+        </label>
+      }
+
+      @if (d.beyondWindow && !d.repeatWeekly) {
+        <p class="note">Beyond the window — auto-books at midnight when the day opens.</p>
+      }
+      @if (d.repeatWeekly) {
+        <p class="note">Creates a standing weekly booking; this slot is reserved for you every week.</p>
+      }
+
+      <div class="actions">
+        <button type="button" class="btn cancel" (click)="closeDialog()">Cancel</button>
+        <button type="button" class="btn confirm" [disabled]="submitting()" (click)="submitDialog()">
+          {{ submitting() ? 'Working…' : (d.repeatWeekly ? 'Create weekly' : (d.beyondWindow ? 'Schedule' : 'Reserve')) }}
+        </button>
+      </div>
+    </div>
   </div>
 }

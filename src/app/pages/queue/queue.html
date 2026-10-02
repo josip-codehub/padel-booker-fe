@@ -20,6 +20,7 @@
       <thead>
         <tr>
           <th>#</th>
+          <th>Club</th>
           <th>Court</th>
           <th>Play date</th>
           <th>Time</th>
@@ -35,9 +36,10 @@
         @for (b of bookings(); track b.id) {
           <tr>
             <td>{{ b.id }}</td>
-            <td>{{ b.courtName || b.courtId }}</td>
+            <td>{{ clubName(b.clubId) }}</td>
+            <td>{{ b.courtName || b.courtId }}@if (b.fixedBookingId) { <span class="weekly" title="Part of a standing weekly booking">⟳ weekly</span> }</td>
             <td>{{ b.playDate }}</td>
-            <td>{{ b.slotTimeFmt }}</td>
+            <td>{{ timeRange(b) }}</td>
             <td>{{ b.price }}</td>
             <td>{{ b.targetFireAt | date: 'EEE d MMM, HH:mm:ss' }}</td>
             <td><span class="status {{ b.status }}">{{ b.status }}</span></td>

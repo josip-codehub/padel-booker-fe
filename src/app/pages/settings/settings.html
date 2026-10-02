@@ -41,3 +41,34 @@
   Credentials are stored locally in your Postgres database, unencrypted, and are used only to talk to
   Sporty Plus. The password is the fallback so the app can mint a fresh token if the current one ever expires.
 </p>
+
+<section class="clubs">
+  <div class="clubs-head">
+    <h3>Clubs &amp; courts</h3>
+    <button type="button" class="refresh" (click)="refreshClubs()">↻ Refresh clubs</button>
+  </div>
+  <p class="note">Untick a court to hide it from the Availability screen (e.g. tennis courts you never book).</p>
+
+  @if (clubsMsg()) {
+    <div class="banner ok">{{ clubsMsg() }}</div>
+  }
+
+  @for (club of clubs(); track club.clubId) {
+    <div class="club-block">
+      <div class="club-name">{{ club.name }} <small>· books {{ club.maxSpanDays }} days ahead</small></div>
+      <div class="court-list">
+        @for (court of courtsFor(club.clubId); track court.id) {
+          <label class="court-opt">
+            <input type="checkbox" [checked]="isVisible(club.clubId, court.id)"
+                   (change)="toggleVisible(club.clubId, court.id)" />
+            {{ court.name }}
+          </label>
+        } @empty {
+          <span class="muted">Loading courts…</span>
+        }
+      </div>
+    </div>
+  } @empty {
+    <p class="muted">No clubs yet — save your Sporty login above, then refresh.</p>
+  }
+</section>
