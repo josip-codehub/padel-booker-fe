@@ -150,10 +150,11 @@
           Length
           <div class="len-ctrl">
             <button type="button" (click)="setLength(d.length - 1)" [disabled]="d.length <= d.minSlots">−</button>
-            <span>{{ d.length }} × {{ d.slotMinutes }}m</span>
+            <span>{{ dialogDuration() }} <small>({{ d.length }} × {{ d.slotMinutes }}m)</small></span>
             <button type="button" (click)="setLength(d.length + 1)" [disabled]="d.length >= d.maxSlots">+</button>
           </div>
         </label>
+        <p class="len-hint">Up to {{ d.maxSlots }} consecutive free slots here.</p>
       }
 
       <div class="summary">

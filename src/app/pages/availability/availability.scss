@@ -326,8 +326,19 @@ table.grid {
         cursor: pointer;
         &:disabled { opacity: 0.4; cursor: default; }
       }
-      span { min-width: 90px; text-align: center; font-weight: 600; }
+      span {
+        min-width: 150px;
+        text-align: center;
+        font-weight: 600;
+        small { font-weight: 400; color: var(--muted); }
+      }
     }
+  }
+
+  .len-hint {
+    margin: -0.4rem 0 0.9rem;
+    font-size: 0.75rem;
+    color: var(--muted);
   }
 
   .summary {

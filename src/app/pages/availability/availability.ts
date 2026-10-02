@@ -291,6 +291,15 @@ export class Availability implements OnInit {
     return this.dialogSlots().reduce((sum, s) => sum + (s.price ?? 0), 0);
   }
 
+  dialogDuration(): string {
+    const d = this.dialog();
+    if (!d) return '';
+    const total = d.length * d.slotMinutes;
+    const h = Math.floor(total / 60);
+    const m = total % 60;
+    return h ? (m ? `${h}h ${m}m` : `${h}h`) : `${m}m`;
+  }
+
   closeDialog(): void {
     this.dialog.set(null);
   }
