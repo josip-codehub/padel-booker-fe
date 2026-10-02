@@ -362,8 +362,10 @@ export class Availability implements OnInit {
     return w.clubs.map((section) => {
       const club = this.clubs().find((c) => c.clubId === section.clubId);
       const span = club?.maxSpanDays ?? 7;
+      const hiddenForClub = this.hiddenCourts()[String(section.clubId)] ?? [];
       const courts = section.courts
-        .filter((c) => this.courtShown(c.courtId))
+        .filter((c) => !hiddenForClub.includes(c.courtId)) // hidden in Settings → never show
+        .filter((c) => this.courtShown(c.courtId)) // availability default-view selection
         .map((c) => this.buildCourt(section, c, span));
       return {
         clubId: section.clubId,
