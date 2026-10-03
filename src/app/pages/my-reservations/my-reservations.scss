@@ -53,6 +53,17 @@ table {
   .pill.paid { background: #d6f5df; color: #0a7d2c; }
   .pill.due { background: #fff2cc; color: #8a6d00; }
 
+  .row-actions { white-space: nowrap; display: flex; gap: 0.5rem; }
+  .players-btn {
+    padding: 0.3rem 0.6rem;
+    background: #fff;
+    border: 1px solid #1f6feb;
+    color: #1f6feb;
+    border-radius: 6px;
+    cursor: pointer;
+    &:hover { background: #1f6feb; color: #fff; }
+  }
+
   .cancel {
     padding: 0.3rem 0.6rem;
     background: #fff;
@@ -61,5 +72,70 @@ table {
     border-radius: 6px;
     cursor: pointer;
     &:hover { background: #ff3b30; color: #fff; }
+  }
+}
+
+/* manage-players dialog */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+.modal {
+  background: var(--panel, #fff);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+
+  h3 { margin: 0 0 0.25rem; }
+  .when { color: var(--muted); font-size: 0.88rem; margin: 0 0 1rem; }
+
+  .plist {
+    list-style: none;
+    margin: 0 0 0.75rem;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+      &.none { color: var(--muted); font-size: 0.85rem; }
+      img, .av {
+        width: 28px; height: 28px; border-radius: 50%; object-fit: cover; flex: 0 0 auto;
+      }
+      .av { background: #1f6feb; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.78rem; }
+      .nm { flex: 1; }
+      .rm {
+        border: 0; background: transparent; cursor: pointer; font-size: 1.2rem; color: var(--muted); line-height: 1;
+        &:disabled { opacity: 0.4; cursor: default; }
+      }
+    }
+  }
+
+  .actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #1f6feb;
+      color: #fff;
+      border-color: #1f6feb;
+      cursor: pointer;
+    }
   }
 }

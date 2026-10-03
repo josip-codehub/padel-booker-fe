@@ -162,6 +162,22 @@
         <div><span>Price</span><strong>{{ dialogTotal() }}</strong></div>
       </div>
 
+      <div class="players">
+        <span class="players-label">Players</span>
+        <div class="player-chips">
+          <span class="me-chip">You</span>
+          @for (p of partners(); track p.playerId) {
+            <span class="partner-chip">
+              {{ p.name }}
+              <button type="button" (click)="removePartner(p.playerId)" aria-label="Remove">×</button>
+            </span>
+          }
+        </div>
+        @if (partners().length < maxPartners) {
+          <app-player-search [clubId]="d.clubId" (picked)="addPartner($event)" />
+        }
+      </div>
+
       @if (isAdmin()) {
         <label class="repeat">
           <input type="checkbox" [ngModel]="d.repeatWeekly" (ngModelChange)="setRepeat($event)" />

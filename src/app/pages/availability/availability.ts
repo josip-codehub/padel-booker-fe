@@ -2,9 +2,10 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
-import { ClubView, CreateBookingRequest, SlotPlayer, Week } from '../../core/models';
+import { ClubView, CreateBookingRequest, PlayerSearchResult, SlotPlayer, Week } from '../../core/models';
 import { addDays, dayMonthLabel, daysUntil, todayIso, weekdayLabel } from '../../core/date-utils';
 import { forkJoin, of, catchError } from 'rxjs';
+import { PlayerSearch } from '../../shared/player-search';
 
 type CellState = 'closed' | 'booked' | 'free' | 'past' | 'mine' | 'queued-mine' | 'queued-other';
 
@@ -76,7 +77,7 @@ interface DialogState {
 
 @Component({
   selector: 'app-availability',
-  imports: [FormsModule],
+  imports: [FormsModule, PlayerSearch],
   templateUrl: './availability.html',
   styleUrl: './availability.scss',
 })
@@ -103,6 +104,8 @@ export class Availability implements OnInit {
 
   dialog = signal<DialogState | null>(null);
   submitting = signal<boolean>(false);
+  partners = signal<PlayerSearchResult[]>([]);
+  readonly maxPartners = 3;
 
   /** Courts available to toggle, grouped by selected club (respecting hidden). From the full court list. */
   readonly courtChoices = computed(() => {
@@ -288,6 +291,7 @@ export class Availability implements OnInit {
     }
     this.error.set(null);
     this.message.set(null);
+    this.partners.set([]);
     this.dialog.set({
       clubId: court.clubId,
       courtId: court.courtId,
@@ -314,6 +318,17 @@ export class Availability implements OnInit {
     const d = this.dialog();
     if (!d) return;
     this.dialog.set({ ...d, repeatWeekly: v });
+  }
+
+  addPartner(p: PlayerSearchResult): void {
+    const cur = this.partners();
+    if (cur.length >= this.maxPartners) return;
+    if (cur.some((x) => x.playerId === p.playerId)) return;
+    this.partners.set([...cur, p]);
+  }
+
+  removePartner(playerId: number): void {
+    this.partners.set(this.partners().filter((p) => p.playerId !== playerId));
   }
 
   dialogSlots(): DialogSlot[] {
@@ -360,6 +375,7 @@ export class Availability implements OnInit {
       slotMinutes: d.slotMinutes,
       slots,
       repeatWeekly: d.repeatWeekly,
+      partnerPlayerIds: this.partners().map((p) => p.playerId),
     };
     const label = `${d.whenLabel} ${this.dialogRange()}`;
     const done = () => {

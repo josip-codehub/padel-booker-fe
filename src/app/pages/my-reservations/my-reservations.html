@@ -56,10 +56,48 @@
                 <span class="pill">—</span>
               }
             </td>
-            <td><button class="cancel" (click)="cancel(r)">Cancel</button></td>
+            <td class="row-actions">
+              <button class="players-btn" (click)="openManage(r)">Players</button>
+              <button class="cancel" (click)="cancel(r)">Cancel</button>
+            </td>
           </tr>
         }
       </tbody>
     </table>
+  </div>
+}
+
+@if (managing(); as r) {
+  <div class="backdrop" (click)="closeManage()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h3>Players</h3>
+      <p class="when">{{ clubName(r.clubId) }} · {{ r.courtName }} — {{ r.date }} {{ r.fromTime }}–{{ r.toTime }}</p>
+
+      @if (manageError()) {
+        <div class="banner err">{{ manageError() }}</div>
+      }
+
+      <ul class="plist">
+        @for (p of managePlayers(); track p.playerId) {
+          <li>
+            @if (p.image) {
+              <img [src]="p.image" referrerpolicy="no-referrer" alt="" />
+            } @else {
+              <span class="av">{{ (p.name || '?').charAt(0) }}</span>
+            }
+            <span class="nm">{{ p.name }}</span>
+            <button class="rm" [disabled]="manageBusy()" (click)="removeManagePlayer(p.playerId)" title="Remove">×</button>
+          </li>
+        } @empty {
+          @if (!manageBusy()) { <li class="none">No players yet.</li> }
+        }
+      </ul>
+
+      <app-player-search [clubId]="r.clubId" (picked)="addManagePlayer($event)" />
+
+      <div class="actions">
+        <button type="button" class="btn" (click)="closeManage()">Done</button>
+      </div>
+    </div>
   </div>
 }

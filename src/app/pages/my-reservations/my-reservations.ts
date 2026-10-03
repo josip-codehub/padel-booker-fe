@@ -2,12 +2,13 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/api.service';
 import { ConfirmService } from '../../core/confirm.service';
-import { MyReservation } from '../../core/models';
+import { MyReservation, PlayerSearchResult, ReservationPlayer } from '../../core/models';
 import { todayIso, weekdayLabel } from '../../core/date-utils';
+import { PlayerSearch } from '../../shared/player-search';
 
 @Component({
   selector: 'app-my-reservations',
-  imports: [FormsModule],
+  imports: [FormsModule, PlayerSearch],
   templateUrl: './my-reservations.html',
   styleUrl: './my-reservations.scss',
 })
@@ -37,6 +38,72 @@ export class MyReservations implements OnInit {
   clubName(id: number | null): string {
     if (id == null) return '—';
     return this.clubNames()[id] ?? `Club ${id}`;
+  }
+
+  // --- manage players ---
+  managing = signal<MyReservation | null>(null);
+  managePlayers = signal<ReservationPlayer[]>([]);
+  manageBusy = signal(false);
+  manageError = signal<string | null>(null);
+
+  openManage(r: MyReservation): void {
+    this.managing.set(r);
+    this.managePlayers.set([]);
+    this.manageError.set(null);
+    this.manageBusy.set(true);
+    this.api.reservationPlayers(r.id, r.clubId, r.courtId, r.date).subscribe({
+      next: (p) => {
+        this.managePlayers.set(p);
+        this.manageBusy.set(false);
+      },
+      error: (e) => {
+        this.manageError.set(this.errMsg(e));
+        this.manageBusy.set(false);
+      },
+    });
+  }
+
+  closeManage(): void {
+    this.managing.set(null);
+  }
+
+  addManagePlayer(p: PlayerSearchResult): void {
+    const r = this.managing();
+    if (!r) return;
+    if (this.managePlayers().some((x) => x.playerId === p.playerId)) return;
+    this.manageBusy.set(true);
+    this.manageError.set(null);
+    this.api
+      .addReservationPlayers(r.id, { club: r.clubId, court: r.courtId, date: r.date, playerIds: [p.playerId] })
+      .subscribe({
+        next: (players) => {
+          this.managePlayers.set(players);
+          this.manageBusy.set(false);
+          this.load(); // refresh the table's player names
+        },
+        error: (e) => {
+          this.manageError.set(this.errMsg(e));
+          this.manageBusy.set(false);
+        },
+      });
+  }
+
+  removeManagePlayer(playerId: number): void {
+    const r = this.managing();
+    if (!r) return;
+    this.manageBusy.set(true);
+    this.manageError.set(null);
+    this.api.removeReservationPlayer(r.id, playerId, r.clubId, r.courtId, r.date).subscribe({
+      next: (players) => {
+        this.managePlayers.set(players);
+        this.manageBusy.set(false);
+        this.load();
+      },
+      error: (e) => {
+        this.manageError.set(this.errMsg(e));
+        this.manageBusy.set(false);
+      },
+    });
   }
 
   load(): void {

@@ -11,7 +11,9 @@ import {
   Health,
   ManagedUser,
   MyReservation,
+  PlayerSearchResult,
   QueuedBooking,
+  ReservationPlayer,
   ReserveNowResult,
   Role,
   SettingsView,
@@ -83,6 +85,36 @@ export class ApiService {
   cancelReservation(id: number, clubId?: number): Observable<unknown> {
     const params: Record<string, string> = clubId ? { club: String(clubId) } : {};
     return this.http.delete(`${BASE}/my-reservations/${id}`, { params });
+  }
+
+  // --- players ---
+  searchPlayers(club: number, q: string): Observable<PlayerSearchResult[]> {
+    return this.http.get<PlayerSearchResult[]>(`${BASE}/players/search`, { params: { club: String(club), q } });
+  }
+
+  reservationPlayers(id: number, club: number, court: number, date: string): Observable<ReservationPlayer[]> {
+    return this.http.get<ReservationPlayer[]>(`${BASE}/my-reservations/${id}/players`, {
+      params: { club: String(club), court: String(court), date },
+    });
+  }
+
+  addReservationPlayers(
+    id: number,
+    body: { club: number; court: number; date: string; playerIds: number[] },
+  ): Observable<ReservationPlayer[]> {
+    return this.http.post<ReservationPlayer[]>(`${BASE}/my-reservations/${id}/players`, body);
+  }
+
+  removeReservationPlayer(
+    id: number,
+    playerId: number,
+    club: number,
+    court: number,
+    date: string,
+  ): Observable<ReservationPlayer[]> {
+    return this.http.delete<ReservationPlayer[]>(`${BASE}/my-reservations/${id}/players/${playerId}`, {
+      params: { club: String(club), court: String(court), date },
+    });
   }
 
   // --- preferences ---

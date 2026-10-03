@@ -178,6 +178,19 @@ export interface MyReservation {
   recurring: boolean;
 }
 
+export interface PlayerSearchResult {
+  teamId: number;
+  playerId: number;
+  name: string | null;
+  image: string | null;
+}
+
+export interface ReservationPlayer {
+  playerId: number;
+  name: string | null;
+  image: string | null;
+}
+
 export interface BookingSlotInput {
   time: number;
   price: number | null;
@@ -191,4 +204,5 @@ export interface CreateBookingRequest {
   slotMinutes?: number;
   slots: BookingSlotInput[];
   repeatWeekly?: boolean;
+  partnerPlayerIds?: number[];
 }

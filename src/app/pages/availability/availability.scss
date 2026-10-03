@@ -350,6 +350,36 @@ table.grid {
     strong { font-size: 1.05rem; }
   }
 
+  .players {
+    margin-bottom: 0.9rem;
+    .players-label { font-size: 0.75rem; color: var(--muted); display: block; margin-bottom: 0.3rem; }
+    .player-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-bottom: 0.5rem;
+    }
+    .me-chip, .partner-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      border: 1px solid var(--border);
+    }
+    .me-chip { background: #e0ecff; border-color: #1f6feb; color: #1f6feb; }
+    .partner-chip button {
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+      color: var(--muted);
+      padding: 0;
+    }
+  }
+
   .repeat {
     display: flex;
     align-items: center;
