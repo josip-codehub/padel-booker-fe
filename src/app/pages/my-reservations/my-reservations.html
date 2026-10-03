@@ -27,6 +27,7 @@
         <tr>
           <th>Date</th>
           <th>Time</th>
+          <th>Club</th>
           <th>Court</th>
           <th>Players</th>
           <th>Price</th>
@@ -42,6 +43,7 @@
               {{ r.fromTime }}–{{ r.toTime }}
               @if (r.recurring) { <span class="tag" title="Recurring series">↻</span> }
             </td>
+            <td>{{ clubName(r.clubId) }}</td>
             <td>{{ r.courtName || r.courtId }}</td>
             <td>{{ r.players.join(', ') }}</td>
             <td>{{ r.totalPrice }}</td>

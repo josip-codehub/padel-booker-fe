@@ -20,9 +20,23 @@ export class MyReservations implements OnInit {
   loading = signal(false);
   error = signal<string | null>(null);
   message = signal<string | null>(null);
+  private clubNames = signal<Record<number, string>>({});
 
   ngOnInit(): void {
+    this.api.clubs().subscribe({
+      next: (clubs) => {
+        const map: Record<number, string> = {};
+        for (const c of clubs) map[c.clubId] = c.name;
+        this.clubNames.set(map);
+      },
+      error: () => {},
+    });
     this.load();
+  }
+
+  clubName(id: number | null): string {
+    if (id == null) return '—';
+    return this.clubNames()[id] ?? `Club ${id}`;
   }
 
   load(): void {
