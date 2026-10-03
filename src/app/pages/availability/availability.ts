@@ -4,6 +4,7 @@ import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
 import { ClubView, CreateBookingRequest, SlotPlayer, Week } from '../../core/models';
 import { addDays, dayMonthLabel, daysUntil, todayIso, weekdayLabel } from '../../core/date-utils';
+import { forkJoin, of, catchError } from 'rxjs';
 
 type CellState = 'closed' | 'booked' | 'free' | 'past' | 'mine' | 'queued-mine' | 'queued-other';
 
@@ -90,6 +91,8 @@ export class Availability implements OnInit {
   selectedClubIds = signal<Set<number>>(new Set());
   selectedCourtIds = signal<Set<number>>(new Set()); // empty = all visible
   hiddenCourts = signal<Record<string, number[]>>({});
+  /** All courts per club (id+name) for the picker — from the cheap courts endpoint, cached per session. */
+  private clubCourts = signal<Record<number, { id: number; name: string }[]>>({});
 
   private rawWeek = signal<Week | null>(null);
   loading = signal<boolean>(false);
@@ -101,17 +104,14 @@ export class Availability implements OnInit {
   dialog = signal<DialogState | null>(null);
   submitting = signal<boolean>(false);
 
-  /** Courts available to toggle, grouped by selected club (respecting hidden). */
+  /** Courts available to toggle, grouped by selected club (respecting hidden). From the full court list. */
   readonly courtChoices = computed(() => {
-    const w = this.rawWeek();
-    if (!w) return [] as { clubId: number; clubName: string; courts: { id: number; name: string }[] }[];
     const hidden = this.hiddenCourts();
-    return w.clubs.map((c) => ({
-      clubId: c.clubId,
-      clubName: c.clubName,
-      courts: c.courts
-        .filter((ct) => !(hidden[String(c.clubId)] ?? []).includes(ct.courtId))
-        .map((ct) => ({ id: ct.courtId, name: ct.courtName })),
+    const cc = this.clubCourts();
+    return [...this.selectedClubIds()].map((clubId) => ({
+      clubId,
+      clubName: this.clubName(clubId),
+      courts: (cc[clubId] ?? []).filter((ct) => !(hidden[String(clubId)] ?? []).includes(ct.id)),
     }));
   });
 
@@ -160,18 +160,60 @@ export class Availability implements OnInit {
     }
     this.loading.set(true);
     this.error.set(null);
-    const from = this.weekStart();
-    const to = addDays(from, 6);
-    this.api.availability(clubIds, [], from, to).subscribe({
-      next: (w) => {
-        this.rawWeek.set(w);
-        this.loading.set(false);
-      },
-      error: (e) => {
-        this.error.set(this.errMsg(e));
-        this.loading.set(false);
-      },
+    // Need each club's court list first so we know which court ids to fetch availability for.
+    this.ensureCourtLists(clubIds, () => {
+      const from = this.weekStart();
+      const to = addDays(from, 6);
+      const courts = this.courtsToFetch(); // only the courts actually shown → scoped upstream fetch
+      this.api.availability(clubIds, courts, from, to).subscribe({
+        next: (w) => {
+          this.rawWeek.set(w);
+          this.loading.set(false);
+        },
+        error: (e) => {
+          this.error.set(this.errMsg(e));
+          this.loading.set(false);
+        },
+      });
     });
+  }
+
+  /** Fetch (and cache for the session) the full court list for any clubs we don't have yet. */
+  private ensureCourtLists(clubIds: number[], done: () => void): void {
+    const missing = clubIds.filter((id) => !this.clubCourts()[id]);
+    if (!missing.length) {
+      done();
+      return;
+    }
+    forkJoin(
+      missing.map((id) =>
+        this.api.courts(id).pipe(catchError(() => of({ data: [] as { id: number; name: string }[] }))),
+      ),
+    ).subscribe((results) => {
+      const next = { ...this.clubCourts() };
+      missing.forEach((id, i) => {
+        const r = results[i] as { data?: { id: number; name: string }[] } | { id: number; name: string }[];
+        const arr = Array.isArray(r) ? r : (r?.data ?? []);
+        next[id] = arr.map((c) => ({ id: c.id, name: c.name }));
+      });
+      this.clubCourts.set(next);
+      done();
+    });
+  }
+
+  /** The court ids currently shown (visible, not hidden, and selected if a selection is active). */
+  private courtsToFetch(): number[] {
+    const sel = this.selectedCourtIds();
+    const hidden = this.hiddenCourts();
+    const out: number[] = [];
+    for (const clubId of this.selectedClubIds()) {
+      const hid = hidden[String(clubId)] ?? [];
+      for (const c of this.clubCourts()[clubId] ?? []) {
+        if (hid.includes(c.id)) continue;
+        if (sel.size === 0 || sel.has(c.id)) out.push(c.id);
+      }
+    }
+    return out;
   }
 
   toggleClub(id: number): void {
@@ -186,7 +228,8 @@ export class Availability implements OnInit {
     const next = new Set(this.selectedCourtIds());
     if (next.has(id)) next.delete(id);
     else next.add(id);
-    this.selectedCourtIds.set(next); // client-side filter, no refetch
+    this.selectedCourtIds.set(next);
+    this.load(); // scoped fetch: showing a court means fetching it
   }
 
   courtShown(id: number): boolean {
