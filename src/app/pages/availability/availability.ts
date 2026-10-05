@@ -2,7 +2,16 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
-import { ClubView, CreateBookingRequest, PlayerSearchResult, SlotPlayer, Week } from '../../core/models';
+import { NgTemplateOutlet } from '@angular/common';
+import {
+  ClubForecast,
+  ClubView,
+  CreateBookingRequest,
+  PlayerSearchResult,
+  SlotPlayer,
+  WeatherBlock,
+  Week,
+} from '../../core/models';
 import { addDays, dayMonthLabel, daysUntil, todayIso, weekdayLabel } from '../../core/date-utils';
 import { forkJoin, of, catchError } from 'rxjs';
 import { PlayerSearch } from '../../shared/player-search';
@@ -20,12 +29,21 @@ interface CellView {
   players: SlotPlayer[];
 }
 
+/** One cell of the forecast sub-row; spans the slot columns its forecast block covers. */
+interface WeatherCell {
+  colspan: number;
+  symbol: string | null;
+  temp: number | null;
+  title: string;
+}
+
 interface RowView {
   date: string;
   weekday: string;
   dayMonth: string;
   beyondWindow: boolean;
   cells: CellView[];
+  weather: WeatherCell[] | null; // null = no forecast row (indoor court or no data for the club)
 }
 
 interface CourtView {
@@ -77,7 +95,7 @@ interface DialogState {
 
 @Component({
   selector: 'app-availability',
-  imports: [FormsModule, PlayerSearch],
+  imports: [FormsModule, PlayerSearch, NgTemplateOutlet],
   templateUrl: './availability.html',
   styleUrl: './availability.scss',
 })
@@ -92,6 +110,11 @@ export class Availability implements OnInit {
   selectedClubIds = signal<Set<number>>(new Set());
   selectedCourtIds = signal<Set<number>>(new Set()); // empty = all visible
   hiddenCourts = signal<Record<string, number[]>>({});
+  indoorCourts = signal<Record<string, number[]>>({});
+  /** Forecast blocks per club (served from the backend's daily cache). */
+  weather = signal<Record<number, WeatherBlock[]>>({});
+  weatherFetchedAt = signal<string | null>(null);
+  refreshingWeather = signal(false);
   /** All courts per club (id+name) for the picker — from the cheap courts endpoint, cached per session. */
   private clubCourts = signal<Record<number, { id: number; name: string }[]>>({});
 
@@ -126,7 +149,10 @@ export class Availability implements OnInit {
       next: (clubs) => {
         this.clubs.set(clubs);
         this.api.getCourtPrefs().subscribe({
-          next: (cp) => this.hiddenCourts.set(cp?.hidden ?? {}),
+          next: (cp) => {
+            this.hiddenCourts.set(cp?.hidden ?? {});
+            this.indoorCourts.set(cp?.indoor ?? {});
+          },
           error: () => {},
         });
         this.api.getAvailabilityPrefs().subscribe({
@@ -163,6 +189,7 @@ export class Availability implements OnInit {
     }
     this.loading.set(true);
     this.error.set(null);
+    this.loadWeather(clubIds); // in parallel; served from the backend's daily cache
     // Need each club's court list first so we know which court ids to fetch availability for.
     this.ensureCourtLists(clubIds, () => {
       const from = this.weekStart();
@@ -179,6 +206,49 @@ export class Availability implements OnInit {
         },
       });
     });
+  }
+
+  private loadWeather(clubIds: number[]): void {
+    this.api.weather(clubIds).subscribe({
+      next: (f) => this.applyForecasts(f),
+      error: () => {}, // weather is best-effort; the grid works without it
+    });
+  }
+
+  /** "Refresh forecast": ask the backend to refetch from MET/Open-Meteo (throttled server-side). */
+  refreshForecast(): void {
+    const clubIds = [...this.selectedClubIds()];
+    if (!clubIds.length) return;
+    this.refreshingWeather.set(true);
+    this.api.refreshWeather(clubIds).subscribe({
+      next: (f) => {
+        this.applyForecasts(f);
+        this.refreshingWeather.set(false);
+        this.flash('Forecast updated.');
+      },
+      error: (e) => {
+        this.refreshingWeather.set(false);
+        this.error.set(this.errMsg(e));
+      },
+    });
+  }
+
+  private applyForecasts(forecasts: ClubForecast[]): void {
+    const next = { ...this.weather() };
+    let latest: string | null = null;
+    for (const f of forecasts) {
+      next[f.clubId] = f.blocks;
+      if (!latest || f.fetchedAt > latest) latest = f.fetchedAt;
+    }
+    this.weather.set(next);
+    this.weatherFetchedAt.set(latest);
+  }
+
+  weatherUpdatedLabel(): string {
+    const at = this.weatherFetchedAt();
+    if (!at) return 'Refresh forecast';
+    const t = new Date(at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return `Forecast updated ${t} — click to refresh`;
   }
 
   /** Fetch (and cache for the session) the full court list for any clubs we don't have yet. */
@@ -445,6 +515,10 @@ export class Availability implements OnInit {
     for (const day of c.days) for (const s of day.slots) timeMap.set(s.time, s.timeFmt);
     const times = [...timeMap.entries()].sort((a, b) => a[0] - b[0]).map(([time, timeFmt]) => ({ time, timeFmt }));
 
+    // Forecast row: skipped for indoor courts and when the club has no forecast data at all.
+    const indoor = (this.indoorCourts()[String(section.clubId)] ?? []).includes(c.courtId);
+    const blocks = indoor ? [] : this.parsedBlocks(this.weather()[section.clubId] ?? []);
+
     const rows: RowView[] = c.days.map((day) => {
       const slotByTime = new Map(day.slots.map((s) => [s.time, s]));
       const beyond = daysUntil(day.date) > span;
@@ -482,6 +556,7 @@ export class Availability implements OnInit {
         dayMonth: dayMonthLabel(day.date),
         beyondWindow: beyond,
         cells,
+        weather: blocks.length ? this.weatherCells(day.date, times, blocks) : null,
       };
     });
 
@@ -495,6 +570,64 @@ export class Availability implements OnInit {
       times,
       rows,
     };
+  }
+
+  /** Blocks with start/end as naive-local minutes, for interval lookups against slot times. */
+  private parsedBlocks(blocks: WeatherBlock[]): { b: WeatherBlock; start: number; end: number }[] {
+    return blocks.map((b) => {
+      const start = this.localMinutes(b.start);
+      return { b, start, end: start + b.hours * 60 };
+    });
+  }
+
+  /**
+   * Map forecast blocks onto a day's slot columns: each column takes the block covering its START time
+   * (so a 90-min Modesto slot shows its start hour), and neighbouring columns in the same block merge
+   * into one cell (an hour = 2 Silax columns; a 6-hour block spans many).
+   */
+  private weatherCells(
+    date: string,
+    times: { time: number; timeFmt: string }[],
+    blocks: { b: WeatherBlock; start: number; end: number }[],
+  ): WeatherCell[] {
+    const dayStart = this.localMinutes(`${date}T00:00`);
+    const cells: (WeatherCell & { key: string })[] = [];
+    for (const t of times) {
+      const at = dayStart + this.codeToMinutes(t.time);
+      const hit = blocks.find((x) => x.start <= at && at < x.end);
+      const key = hit ? hit.b.start : 'none';
+      const last = cells[cells.length - 1];
+      if (last && last.key === key) {
+        last.colspan++;
+        continue;
+      }
+      cells.push({
+        key,
+        colspan: 1,
+        symbol: hit ? hit.b.symbol : null,
+        temp: hit && hit.b.tempC != null ? Math.round(hit.b.tempC) : null,
+        title: hit ? this.blockTitle(hit.b) : '',
+      });
+    }
+    if (cells.length === 1 && cells[0].key === 'none') cells[0].title = 'No forecast yet';
+    return cells.map(({ key, ...c }) => c);
+  }
+
+  private blockTitle(b: WeatherBlock): string {
+    const from = b.start.slice(11, 16);
+    const to = this.minutesToFmt((this.localMinutes(b.start) + b.hours * 60) % (24 * 60));
+    const range = b.hours === 1 ? from : `${from}–${to}`;
+    const src = b.source === 'met' ? 'MET Norway' : 'Open-Meteo';
+    const temp = b.tempC != null ? ` · ${Math.round(b.tempC)}°C` : '';
+    return `${range}${temp} · ${b.symbol.replace(/_(day|night)$/, '').replace(/([a-z])(and|showers|thunder)/g, '$1 $2')} (${src})`;
+  }
+
+  /** "yyyy-MM-ddTHH:mm" as minutes on a naive local timeline (DST-free arithmetic is fine here). */
+  private localMinutes(s: string): number {
+    const [d, tm] = s.split('T');
+    const [y, m, day] = d.split('-').map(Number);
+    const [hh, mm] = (tm ?? '00:00').split(':').map(Number);
+    return Date.UTC(y, m - 1, day, hh, mm) / 60000;
   }
 
   onEnter(cell: CellView, event: MouseEvent): void {

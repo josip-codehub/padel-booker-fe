@@ -30,6 +30,7 @@ export class Settings implements OnInit {
   clubs = signal<ClubView[]>([]);
   courtsByClub = signal<Record<number, CourtOpt[]>>({});
   hidden = signal<Record<string, number[]>>({});
+  indoor = signal<Record<string, number[]>>({});
   clubsMsg = signal<string | null>(null);
 
   ngOnInit(): void {
@@ -48,7 +49,13 @@ export class Settings implements OnInit {
   }
 
   private loadClubsAndCourts(): void {
-    this.api.getCourtPrefs().subscribe({ next: (cp) => this.hidden.set(cp?.hidden ?? {}), error: () => {} });
+    this.api.getCourtPrefs().subscribe({
+      next: (cp) => {
+        this.hidden.set(cp?.hidden ?? {});
+        this.indoor.set(cp?.indoor ?? {});
+      },
+      error: () => {},
+    });
     this.api.clubs().subscribe({
       next: (clubs) => {
         this.clubs.set(clubs);
@@ -78,14 +85,31 @@ export class Settings implements OnInit {
   }
 
   toggleVisible(clubId: number, courtId: number): void {
+    this.hidden.set(this.toggled(this.hidden(), clubId, courtId));
+    this.saveCourtPrefs('Court visibility saved.');
+  }
+
+  isIndoor(clubId: number, courtId: number): boolean {
+    return (this.indoor()[String(clubId)] ?? []).includes(courtId);
+  }
+
+  /** Indoor courts get no weather row on the Availability screen. */
+  toggleIndoor(clubId: number, courtId: number): void {
+    this.indoor.set(this.toggled(this.indoor(), clubId, courtId));
+    this.saveCourtPrefs('Indoor setting saved.');
+  }
+
+  private toggled(map: Record<string, number[]>, clubId: number, courtId: number): Record<string, number[]> {
     const key = String(clubId);
-    const current = new Set(this.hidden()[key] ?? []);
+    const current = new Set(map[key] ?? []);
     if (current.has(courtId)) current.delete(courtId);
     else current.add(courtId);
-    const next = { ...this.hidden(), [key]: [...current] };
-    this.hidden.set(next);
-    this.api.putCourtPrefs({ hidden: next }).subscribe({
-      next: () => this.clubsMsg.set('Court visibility saved.'),
+    return { ...map, [key]: [...current] };
+  }
+
+  private saveCourtPrefs(msg: string): void {
+    this.api.putCourtPrefs({ hidden: this.hidden(), indoor: this.indoor() }).subscribe({
+      next: () => this.clubsMsg.set(msg),
       error: (e) => this.error.set(this.errMsg(e)),
     });
   }

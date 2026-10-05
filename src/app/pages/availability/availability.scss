@@ -89,6 +89,31 @@
   }
 }
 
+.toolbar .forecast {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.8rem;
+  img { width: 18px; height: 18px; }
+  &:disabled { opacity: 0.6; cursor: default; }
+}
+
+/* forecast sub-row (upper half of each day's double row) */
+table.grid {
+  tr.wrow td.wcell {
+    height: 22px;
+    padding: 0 0.15rem;
+    background: var(--panel);
+    color: var(--muted);
+    font-size: 0.72rem;
+    white-space: nowrap;
+    border-bottom-style: dashed;
+    img { width: 16px; height: 16px; vertical-align: -3px; }
+    .wt { margin-left: 0.15rem; color: inherit; }
+    .nofc { font-style: italic; }
+  }
+}
+
 .legend {
   display: flex;
   align-items: center;
@@ -96,6 +121,12 @@
   flex-wrap: wrap;
   margin-bottom: 1rem;
   font-size: 0.8rem;
+  .attrib {
+    margin-left: auto;
+    color: var(--muted);
+    font-size: 0.72rem;
+    a { color: inherit; }
+  }
 
   .chip {
     padding: 0.15rem 0.5rem;

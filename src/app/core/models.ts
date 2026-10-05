@@ -84,9 +84,25 @@ export interface AvailabilityPrefs {
   courts?: number[];
 }
 
-/** Per-user, per-club court visibility (court ids to hide). */
+/** Per-user, per-club court settings. */
 export interface CourtPrefs {
   hidden?: Record<string, number[]>; // clubId -> hidden court ids
+  indoor?: Record<string, number[]>; // clubId -> indoor court ids (no weather row)
+}
+
+/** A forecast block in club-local time ("yyyy-MM-ddTHH:mm"), `hours` long; symbol = MET icon name. */
+export interface WeatherBlock {
+  start: string;
+  hours: number;
+  tempC: number | null;
+  symbol: string;
+  source: 'met' | 'open-meteo';
+}
+
+export interface ClubForecast {
+  clubId: number;
+  fetchedAt: string;
+  blocks: WeatherBlock[];
 }
 
 export interface FixedBookingView {

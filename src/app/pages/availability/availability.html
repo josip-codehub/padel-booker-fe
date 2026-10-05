@@ -6,6 +6,9 @@
   </label>
   <button (click)="nextWeek()" class="nav">Next ›</button>
   <button (click)="load()" class="refresh" title="Reload live data">↻</button>
+  <button (click)="refreshForecast()" class="forecast" [disabled]="refreshingWeather()" [title]="weatherUpdatedLabel()">
+    <img src="weather/partlycloudy_day.svg" alt="" /> {{ refreshingWeather() ? 'Refreshing…' : 'Refresh forecast' }}
+  </button>
   <button (click)="showPicker.set(!showPicker())" class="refresh" title="Choose clubs and courts">⚙ Clubs &amp; courts</button>
 </div>
 
@@ -48,6 +51,11 @@
   <span class="chip booked">Booked</span>
   <span class="chip past">Past</span>
   <span class="hint">✦ = beyond the booking window; auto-books at midnight when it opens. Hover a taken slot to see who.</span>
+  <span class="attrib">
+    Weather: <a href="https://api.met.no/" target="_blank" rel="noopener">MET Norway</a> ·
+    <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>
+    (<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>)
+  </span>
 </div>
 
 @if (message()) {
@@ -81,33 +89,30 @@
             </thead>
             <tbody>
               @for (row of court.rows; track row.date) {
-                <tr>
-                  <th class="daycol">
-                    <span class="wd">{{ row.weekday }}</span>
-                    <span class="dm">{{ row.dayMonth }}</span>
-                    @if (row.beyondWindow) {
-                      <span class="star" title="Beyond the window — auto-booked at midnight">✦</span>
+                @if (row.weather) {
+                  <!-- double row: forecast on top, slots below; the day cell spans both -->
+                  <tr class="wrow">
+                    <ng-container [ngTemplateOutlet]="dayCell" [ngTemplateOutletContext]="{ row: row, span: 2 }" />
+                    @for (w of row.weather; track $index) {
+                      <td class="wcell" [attr.colspan]="w.colspan" [title]="w.title">
+                        @if (w.symbol) {
+                          <img [src]="'weather/' + w.symbol + '.svg'" alt="" />
+                          @if (w.temp !== null) { <span class="wt">{{ w.temp }}°</span> }
+                        } @else if (w.title) {
+                          <span class="nofc">{{ w.title }}</span>
+                        }
+                      </td>
                     }
-                  </th>
-                  @for (cell of row.cells; track cell.time; let i = $index) {
-                    <td [class]="cell.state" (mouseenter)="onEnter(cell, $event)" (mouseleave)="onLeave()">
-                      @if (cell.state === 'free') {
-                        <button class="slot" (click)="openBooking(court, row, i)"
-                                [title]="row.beyondWindow ? 'Schedule for midnight' : 'Reserve'">
-                          <span class="price">{{ cell.price }}</span>
-                        </button>
-                      } @else if (cell.state === 'mine') {
-                        <span class="mark">✓ you</span>
-                      } @else if (cell.state === 'queued-mine') {
-                        <span class="mark" title="Held by you — auto-books at midnight">⏳ you</span>
-                      } @else if (cell.state === 'queued-other') {
-                        <span class="mark qother">{{ cell.queuedBy }}</span>
-                      } @else if (cell.state === 'booked') {
-                        <span class="mark bookedname">{{ cell.shortName || '—' }}</span>
-                      }
-                    </td>
-                  }
-                </tr>
+                  </tr>
+                  <tr>
+                    <ng-container [ngTemplateOutlet]="slotCells" [ngTemplateOutletContext]="{ court: court, row: row }" />
+                  </tr>
+                } @else {
+                  <tr>
+                    <ng-container [ngTemplateOutlet]="dayCell" [ngTemplateOutletContext]="{ row: row, span: 1 }" />
+                    <ng-container [ngTemplateOutlet]="slotCells" [ngTemplateOutletContext]="{ court: court, row: row }" />
+                  </tr>
+                }
               }
             </tbody>
           </table>
@@ -201,3 +206,34 @@
     </div>
   </div>
 }
+
+<ng-template #dayCell let-row="row" let-span="span">
+  <th class="daycol" [attr.rowspan]="span">
+    <span class="wd">{{ row.weekday }}</span>
+    <span class="dm">{{ row.dayMonth }}</span>
+    @if (row.beyondWindow) {
+      <span class="star" title="Beyond the window — auto-booked at midnight">✦</span>
+    }
+  </th>
+</ng-template>
+
+<ng-template #slotCells let-court="court" let-row="row">
+  @for (cell of row.cells; track cell.time; let i = $index) {
+    <td [class]="cell.state" (mouseenter)="onEnter(cell, $event)" (mouseleave)="onLeave()">
+      @if (cell.state === 'free') {
+        <button class="slot" (click)="openBooking(court, row, i)"
+                [title]="row.beyondWindow ? 'Schedule for midnight' : 'Reserve'">
+          <span class="price">{{ cell.price }}</span>
+        </button>
+      } @else if (cell.state === 'mine') {
+        <span class="mark">✓ you</span>
+      } @else if (cell.state === 'queued-mine') {
+        <span class="mark" title="Held by you — auto-books at midnight">⏳ you</span>
+      } @else if (cell.state === 'queued-other') {
+        <span class="mark qother">{{ cell.queuedBy }}</span>
+      } @else if (cell.state === 'booked') {
+        <span class="mark bookedname">{{ cell.shortName || '—' }}</span>
+      }
+    </td>
+  }
+</ng-template>

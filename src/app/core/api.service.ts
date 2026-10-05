@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import {
   AvailabilityPrefs,
   BookingAttempt,
+  ClubForecast,
   ClubView,
   CourtPrefs,
   CreateBookingRequest,
@@ -115,6 +116,15 @@ export class ApiService {
     return this.http.delete<ReservationPlayer[]>(`${BASE}/my-reservations/${id}/players/${playerId}`, {
       params: { club: String(club), court: String(court), date },
     });
+  }
+
+  // --- weather (cached server-side for the day; refresh is throttled) ---
+  weather(clubs: number[]): Observable<ClubForecast[]> {
+    return this.http.get<ClubForecast[]>(`${BASE}/weather`, { params: { clubs: clubs.map(String) } });
+  }
+
+  refreshWeather(clubs: number[]): Observable<ClubForecast[]> {
+    return this.http.post<ClubForecast[]>(`${BASE}/weather/refresh`, {}, { params: { clubs: clubs.map(String) } });
   }
 
   // --- preferences ---

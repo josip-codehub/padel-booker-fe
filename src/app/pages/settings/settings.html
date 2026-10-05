@@ -47,7 +47,10 @@
     <h3>Clubs &amp; courts</h3>
     <button type="button" class="refresh" (click)="refreshClubs()">↻ Refresh clubs</button>
   </div>
-  <p class="note">Untick a court to hide it from the Availability screen (e.g. tennis courts you never book).</p>
+  <p class="note">
+    Untick a court to hide it from the Availability screen (e.g. tennis courts you never book).
+    Mark a court as indoor to drop its weather row.
+  </p>
 
   @if (clubsMsg()) {
     <div class="banner ok">{{ clubsMsg() }}</div>
@@ -58,11 +61,18 @@
       <div class="club-name">{{ club.name }} <small>· books {{ club.maxSpanDays }} days ahead</small></div>
       <div class="court-list">
         @for (court of courtsFor(club.clubId); track court.id) {
-          <label class="court-opt">
-            <input type="checkbox" [checked]="isVisible(club.clubId, court.id)"
-                   (change)="toggleVisible(club.clubId, court.id)" />
-            {{ court.name }}
-          </label>
+          <div class="court-row">
+            <label class="court-opt">
+              <input type="checkbox" [checked]="isVisible(club.clubId, court.id)"
+                     (change)="toggleVisible(club.clubId, court.id)" />
+              {{ court.name }}
+            </label>
+            <label class="indoor-opt" title="Indoor courts don't show a weather row">
+              <input type="checkbox" [checked]="isIndoor(club.clubId, court.id)"
+                     (change)="toggleIndoor(club.clubId, court.id)" />
+              Indoor
+            </label>
+          </div>
         } @empty {
           <span class="muted">Loading courts…</span>
         }
